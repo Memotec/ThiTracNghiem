@@ -2,69 +2,117 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Hệ Thống Thi Trắc Nghiệm</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Thi Trắc Nghiệm - Bản Ổn Định</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #4f46e5; --dark: #1e293b; --bg: #f8fafc; }
+        :root { --primary: #4f46e5; --success: #22c55e; --danger: #ef4444; --dark: #1e293b; --bg: #f8fafc; }
         body { font-family: 'Quicksand', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
-        .container { max-width: 900px; background: white; margin: 0 auto; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: hidden; }
+        .container { max-width: 1000px; background: white; margin: 0 auto; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: hidden; }
         .hidden { display: none !important; }
         .p-30 { padding: 30px; }
-        .btn { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; transition: 0.3s; }
+        .btn { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; transition: 0.3s; display: inline-block; }
         .btn-primary { background: var(--primary); color: white; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #cbd5e1; border-radius: 8px; }
+        .btn-admin { background: #0ea5e9; color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; }
+        
+        /* Giao diện thi */
         .quiz-header { background: var(--dark); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
-        .option-card { padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; margin-bottom: 10px; cursor: pointer; }
+        .option-card { padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; margin-bottom: 10px; cursor: pointer; font-weight: 500; }
         .option-card.selected { background: var(--primary); color: white; border-color: var(--primary); }
         .review-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 20px; }
-        .badge { padding: 10px; background: #f1f5f9; text-align: center; border-radius: 5px; cursor: pointer; }
+        .badge { padding: 10px; background: #f1f5f9; text-align: center; border-radius: 5px; cursor: pointer; font-weight: 700; }
         .badge.done { background: var(--primary); color: white; }
+        
+        .admin-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- MÀN HÌNH ĐĂNG NHẬP -->
+    <!-- 1. MÀN HÌNH ĐĂNG NHẬP -->
     <div id="login-screen" class="p-30">
-        <h2 style="text-align:center">ĐĂNG NHẬP</h2>
-        <input type="text" id="user-sbd" placeholder="Nhập Số báo danh">
-        <button class="btn btn-primary" style="width:100%" onclick="login()">VÀO THI</button>
-        <hr style="margin: 30px 0">
-        <button class="btn" style="width:100%; background:#0ea5e9; color:white" onclick="syncDrive()">ĐỒNG BỘ ĐỀ TỪ DRIVE (ADMIN)</button>
+        <div style="max-width: 400px; margin: 0 auto; text-align: center;">
+            <h2 style="color: var(--primary);">HỆ THỐNG THI TRỰC TUYẾN</h2>
+            <input type="text" id="user-sbd" placeholder="Nhập Số báo danh">
+            <button class="btn btn-primary" style="width:100%" onclick="login()">VÀO THI</button>
+            <p id="login-msg" style="color:red; margin-top:10px"></p>
+        </div>
     </div>
 
-    <!-- MÀN HÌNH THI -->
+    <!-- 2. MÀN HÌNH QUẢN TRỊ (ADMIN) -->
+    <div id="admin-screen" class="hidden p-30">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #eee; padding-bottom:10px; margin-bottom:20px;">
+            <h3>BẢNG QUẢN TRỊ</h3>
+            <button class="btn btn-danger" onclick="location.reload()">Đăng xuất</button>
+        </div>
+
+        <div class="admin-box">
+            <h4>1. Ngân hàng đề & Cấu hình</h4>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px">
+                <div>
+                    <label>Số câu hỏi thi:</label>
+                    <input type="number" id="cfg-num" value="10">
+                </div>
+                <div>
+                    <label>Thời gian (phút):</label>
+                    <input type="number" id="cfg-time" value="15">
+                </div>
+            </div>
+            <button class="btn btn-admin" style="width:100%; margin-top:10px" onclick="syncDrive()">ĐỒNG BỘ ĐỀ TỪ DRIVE</button>
+        </div>
+
+        <div class="admin-box" style="background: #fff1f2;">
+            <h4>2. Quản lý thí sinh</h4>
+            <div style="display:flex; gap:10px">
+                <input type="text" id="new-sbd" placeholder="Nhập SBD thí sinh mới" style="margin:0">
+                <button class="btn btn-primary" onclick="addStudent()">THÊM</button>
+            </div>
+            <button class="btn btn-primary" style="width:100%; margin-top:10px; background:#6366f1" onclick="loadStudentsFromCloud()">ĐỒNG BỘ DANH SÁCH THÍ SINH</button>
+            <p id="st-count" style="margin-top:10px; font-weight:700"></p>
+        </div>
+    </div>
+
+    <!-- 3. MÀN HÌNH THI -->
     <div id="quiz-screen" class="hidden">
         <div class="quiz-header">
-            <div>Câu <span id="q-idx">1</span></div>
-            <div id="timer" style="font-size: 1.5rem">00:00</div>
+            <div>Câu <span id="q-idx">1</span> / <span id="q-total">10</span></div>
+            <div id="timer" style="font-size: 1.5rem; font-weight:bold; color:#fbbf24">00:00</div>
         </div>
         <div class="p-30">
-            <h3 id="q-text"></h3>
+            <h3 id="q-text" style="line-height:1.5"></h3>
             <div id="options-box"></div>
+            
             <div style="display:flex; justify-content:space-between; margin-top:30px">
-                <button class="btn" onclick="prevQ()">QUAY LẠI</button>
+                <button class="btn" style="background:#64748b; color:white" onclick="prevQ()">QUAY LẠI</button>
                 <button class="btn btn-primary" onclick="nextQ()">TIẾP THEO</button>
             </div>
+
             <div class="review-grid" id="review-grid"></div>
-            <button class="btn" style="width:100%; margin-top:30px; background:#ef4444; color:white" onclick="confirmSubmit()">NỘP BÀI</button>
+            <button class="btn btn-danger" style="width:100%; margin-top:30px;" onclick="confirmSubmit()">NỘP BÀI THI</button>
         </div>
     </div>
 
-    <!-- MÀN HÌNH KẾT QUẢ -->
+    <!-- 4. MÀN HÌNH KẾT QUẢ -->
     <div id="result-screen" class="hidden p-30" style="text-align:center">
-        <h1 id="res-score" style="font-size: 4rem; color: var(--primary)"></h1>
-        <button class="btn btn-primary" onclick="location.reload()">THOÁT</button>
+        <h2 style="color: #64748b;">KẾT QUẢ BÀI LÀM</h2>
+        <h1 id="res-score" style="font-size: 5rem; color: var(--primary); margin: 20px 0;">0/10</h1>
+        <p>Kết quả đã được đồng bộ lên hệ thống.</p>
+        <button class="btn btn-primary" onclick="location.reload()">QUAY LẠI</button>
     </div>
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxuR0w8XtD_Ze3D3pOXLG8PIVKg2rT0DZ0KySAV9hvzb_rBKrL-kFE4wL8fxenShFJ4Kw/exec"; // <-- QUAN TRỌNG: Thay URL của bạn vào đây
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxuR0w8XtD_Ze3D3pOXLG8PIVKg2rT0DZ0KySAV9hvzb_rBKrL-kFE4wL8fxenShFJ4Kw/exec";
 
     let db_questions = JSON.parse(localStorage.getItem('db_questions')) || [];
-    let currentExam = [], userAnswers = [], currentIdx = 0, timer, totalSec = 900;
+    let validStudents = JSON.parse(localStorage.getItem('db_students')) || [];
+    let config = { numQ: 10, duration: 15 };
 
-    // 1. Đồng bộ Drive
+    let currentExam = [], userAnswers = [], currentIdx = 0, timer, totalSec = 0;
+
+    // --- QUẢN TRỊ ---
     async function syncDrive() {
         try {
             const res = await fetch(SCRIPT_URL + "?action=syncDrive");
@@ -72,35 +120,86 @@
             if (data.error) throw new Error(data.error);
             db_questions = data;
             localStorage.setItem('db_questions', JSON.stringify(data));
-            alert("Đã đồng bộ thành công " + data.length + " câu hỏi!");
-        } catch (e) { alert("Lỗi: " + e.message); }
+            alert("Đã đồng bộ " + data.length + " câu hỏi từ Drive!");
+        } catch (e) { alert("Lỗi đồng bộ đề: " + e.message); }
     }
 
-    // 2. Đăng nhập & Kiểm tra Phục hồi
-    function login() {
-        const sbd = document.getElementById('user-sbd').value;
-        if (!sbd) return alert("Vui lòng nhập SBD!");
+    async function addStudent() {
+        const sbd = document.getElementById('new-sbd').value.trim();
+        if (!sbd) return;
+        if (validStudents.includes(sbd)) return alert("SBD đã tồn tại!");
+
+        validStudents.push(sbd);
+        localStorage.setItem('db_students', JSON.stringify(validStudents));
+        updateStudentCount();
         
+        fetch(SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            body: JSON.stringify({ action: "addStudent", data: { sbd: sbd } })
+        });
+        document.getElementById('new-sbd').value = '';
+    }
+
+    async function loadStudentsFromCloud() {
+        try {
+            const res = await fetch(SCRIPT_URL + "?action=getStudents");
+            const data = await res.json();
+            validStudents = data;
+            localStorage.setItem('db_students', JSON.stringify(data));
+            updateStudentCount();
+            alert("Đã đồng bộ danh sách thí sinh!");
+        } catch (e) { alert("Lỗi tải thí sinh!"); }
+    }
+
+    function updateStudentCount() {
+        document.getElementById('st-count').innerText = `Tổng số thí sinh: ${validStudents.length}`;
+    }
+
+    // --- ĐĂNG NHẬP & PHỤC HỒI ---
+    function login() {
+        const sbd = document.getElementById('user-sbd').value.trim();
+        if (!sbd) return alert("Vui lòng nhập SBD!");
+
+        if (sbd === 'admin') {
+            const pass = prompt("Nhập mật khẩu Admin:");
+            if (pass === 'admin') {
+                updateStudentCount();
+                return switchScreen('admin-screen');
+            }
+            return alert("Sai mật khẩu!");
+        }
+
+        if (validStudents.length > 0 && !validStudents.includes(sbd)) {
+            return alert("Số báo danh này không có trong danh sách dự thi!");
+        }
+
+        startQuizLogic(sbd);
+    }
+
+    function startQuizLogic(sbd) {
         const saved = localStorage.getItem('backup_' + sbd);
-        if (saved && confirm("Bạn có bài thi chưa hoàn thành. Tiếp tục chứ?")) {
+        if (saved && confirm("Bạn có bài thi đang làm dở. Bạn có muốn phục hồi để làm tiếp không?")) {
             const data = JSON.parse(saved);
             currentExam = data.currentExam;
             userAnswers = data.userAnswers;
             totalSec = data.totalSec;
             currentIdx = data.currentIdx;
         } else {
-            if (db_questions.length === 0) return alert("Chưa có dữ liệu đề thi!");
-            currentExam = [...db_questions].sort(() => 0.5 - Math.random()).slice(0, 10);
+            if (db_questions.length === 0) return alert("Hệ thống chưa có đề thi!");
+            const num = parseInt(document.getElementById('cfg-num').value) || 10;
+            currentExam = [...db_questions].sort(() => 0.5 - Math.random()).slice(0, num);
             userAnswers = currentExam.map(q => ({ choice: null, correct: q.correct.toString().toLowerCase().trim() }));
-            totalSec = 900; // 15 phút
+            totalSec = (parseInt(document.getElementById('cfg-time').value) || 15) * 60;
         }
         
+        document.getElementById('q-total').innerText = currentExam.length;
         switchScreen('quiz-screen');
         startTimer();
         renderQ();
     }
 
-    // 3. Logic hiển thị và Lưu tạm
+    // --- LOGIC THI ---
     function renderQ() {
         const q = currentExam[currentIdx];
         document.getElementById('q-idx').innerText = currentIdx + 1;
@@ -115,16 +214,16 @@
                 div.innerText = key.toUpperCase() + ". " + q[key];
                 div.onclick = () => { 
                     userAnswers[currentIdx].choice = key; 
-                    autoSave(); 
+                    saveLocalProgress(); 
                     renderQ(); 
                 };
                 box.appendChild(div);
             }
         });
-        renderReview();
+        renderReviewGrid();
     }
 
-    function autoSave() {
+    function saveLocalProgress() {
         const sbd = document.getElementById('user-sbd').value;
         localStorage.setItem('backup_' + sbd, JSON.stringify({
             currentExam, userAnswers, totalSec, currentIdx
@@ -136,17 +235,17 @@
             totalSec--;
             const m = Math.floor(totalSec/60), s = totalSec%60;
             document.getElementById('timer').innerText = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-            if (totalSec % 5 === 0) autoSave(); // Tự động lưu mỗi 5 giây
+            if (totalSec % 10 === 0) saveLocalProgress();
             if (totalSec <= 0) submitQuiz();
         }, 1000);
     }
 
-    function confirmSubmit() { if(confirm("Bạn có chắc muốn nộp bài?")) submitQuiz(); }
+    function confirmSubmit() { if(confirm("Bạn có chắc chắn muốn nộp bài?")) submitQuiz(); }
 
     async function submitQuiz() {
         clearInterval(timer);
         const sbd = document.getElementById('user-sbd').value;
-        localStorage.removeItem('backup_' + sbd); // Xóa bản lưu sau khi nộp
+        localStorage.removeItem('backup_' + sbd);
 
         let score = userAnswers.filter(a => a.choice === a.correct).length;
         let finalScore = score + "/" + currentExam.length;
@@ -154,14 +253,14 @@
         document.getElementById('res-score').innerText = finalScore;
         switchScreen('result-screen');
 
-        await fetch(SCRIPT_URL, {
+        fetch(SCRIPT_URL, {
             method: "POST",
             mode: "no-cors",
             body: JSON.stringify({ action: "saveResult", data: { sbd, score: finalScore } })
         });
     }
 
-    function renderReview() {
+    function renderReviewGrid() {
         document.getElementById('review-grid').innerHTML = userAnswers.map((a, i) => `
             <div class="badge ${a.choice ? 'done' : ''}" onclick="currentIdx=${i};renderQ()">${i+1}</div>
         `).join('');
@@ -170,7 +269,7 @@
     function nextQ() { if(currentIdx < currentExam.length - 1) { currentIdx++; renderQ(); } }
     function prevQ() { if(currentIdx > 0) { currentIdx--; renderQ(); } }
     function switchScreen(id) {
-        ['login-screen', 'quiz-screen', 'result-screen'].forEach(s => document.getElementById(s).classList.add('hidden'));
+        ['login-screen', 'admin-screen', 'quiz-screen', 'result-screen'].forEach(s => document.getElementById(s).classList.add('hidden'));
         document.getElementById(id).classList.remove('hidden');
     }
 </script>
