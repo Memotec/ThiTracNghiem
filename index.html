@@ -3,152 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Thi Toàn Diện - Admin Recovery</title>
+    <title>Hệ Thống Quản Lý Thi - Admin Full Power</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #4f46e5; --success: #22c55e; --danger: #ef4444; --dark: #1e293b; --bg: #f1f5f9; }
         body { font-family: 'Quicksand', sans-serif; background: var(--bg); margin: 0; padding: 0; color: var(--dark); }
-        .container { max-width: 1100px; background: white; margin: 40px auto; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; min-height: 600px; }
+        .container { max-width: 1100px; background: white; margin: 30px auto; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; min-height: 600px; }
         .hidden { display: none !important; }
         .p-30 { padding: 30px; }
-        .btn { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; transition: 0.3s; display: inline-block; text-align: center; font-size: 0.9rem; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; transition: 0.3s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-admin { background: #0ea5e9; color: white; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-outline { border: 1px solid #cbd5e1; background: #fff; }
         input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-family: inherit; }
 
-        /* --- MODAL ĐĂNG NHẬP --- */
-        #login-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .modal-content { background: white; padding: 40px; border-radius: 20px; width: 90%; max-width: 380px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
-        .modal-content h2 { text-align: center; color: var(--primary); margin: 0 0 20px 0; }
-        .label { font-size: 0.8rem; font-weight: 700; color: #64748b; margin-top: 10px; display: block; text-transform: uppercase; }
-
-        /* --- ADMIN PANEL --- */
+        /* MODAL ĐĂNG NHẬP */
+        #login-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.98); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+        .modal-content { background: white; padding: 40px; border-radius: 20px; width: 90%; max-width: 400px; }
+        
+        /* ADMIN DASHBOARD */
+        .admin-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 30px; }
         .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .card { background: #fff; border: 1px solid #e2e8f0; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        .status-tag { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; background: #f1f5f9; margin-top: 10px; }
+        .card { background: #fff; border: 1px solid #e2e8f0; padding: 25px; border-radius: 12px; }
+        
+        /* STUDENT LIST TABLE */
+        .student-table-container { margin-top: 15px; max-height: 200px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th { background: #f8fafc; position: sticky; top: 0; padding: 10px; text-align: left; border-bottom: 2px solid #eee; }
+        td { padding: 10px; border-bottom: 1px solid #eee; }
 
-        /* --- QUIZ INTERFACE --- */
-        .quiz-layout { display: grid; grid-template-columns: 1fr 320px; gap: 25px; }
-        .quiz-header { background: var(--dark); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
-        .option-card { padding: 18px; border: 2px solid #e2e8f0; border-radius: 12px; margin-bottom: 12px; cursor: pointer; transition: 0.2s; font-weight: 500; }
-        .option-card:hover { border-color: var(--primary); background: #f5f3ff; }
+        /* THI INTERFACE */
+        .quiz-layout { display: grid; grid-template-columns: 1fr 300px; gap: 25px; }
+        .option-card { padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; margin-bottom: 10px; cursor: pointer; }
         .option-card.selected { background: var(--primary); color: white; border-color: var(--primary); }
-
-        /* --- REVIEW PANEL --- */
-        .review-panel { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 15px; padding: 20px; height: fit-content; position: sticky; top: 20px; }
-        .review-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 15px; }
-        .q-badge { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: #fff; border: 1px solid #cbd5e1; font-weight: 700; cursor: pointer; transition: 0.2s; }
-        .q-badge.current { border: 2px solid var(--primary); color: var(--primary); transform: scale(1.1); box-shadow: 0 0 10px rgba(79, 70, 229, 0.2); }
-        .q-badge.answered { background: var(--primary); color: white; border-color: var(--primary); }
+        .review-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 15px; }
+        .q-badge { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid #cbd5e1; cursor: pointer; font-weight: bold; }
+        .q-badge.answered { background: var(--primary); color: white; }
+        .q-badge.current { border: 2px solid var(--primary); color: var(--primary); }
     </style>
 </head>
 <body>
 
-<!-- MÀN HÌNH ĐĂNG NHẬP -->
+<!-- CỬA SỔ ĐĂNG NHẬP -->
 <div id="login-modal">
     <div class="modal-content">
-        <h2>HỆ THỐNG THI</h2>
-        <span class="label">Tên đăng nhập</span>
+        <h2 style="text-align:center; color: var(--primary);">HỆ THỐNG THI</h2>
+        <label style="font-weight:bold; font-size: 0.8rem;">TÀI KHOẢN (SBD)</label>
         <input type="text" id="login-user" placeholder="Nhập SBD hoặc admin">
-        <span class="label">Mật khẩu</span>
+        <label style="font-weight:bold; font-size: 0.8rem;">MẬT KHẨU</label>
         <input type="password" id="login-pass" placeholder="••••••••">
-        <button class="btn btn-primary" style="width:100%; margin-top: 25px;" onclick="handleLogin()">VÀO HỆ THỐNG</button>
-        <p id="login-msg" style="color:var(--danger); text-align: center; margin-top:15px; font-size: 0.85rem; font-weight: bold;"></p>
+        <button class="btn btn-primary" style="width:100%; margin-top: 20px;" onclick="handleLogin()">ĐĂNG NHẬP</button>
+        <p id="login-msg" style="color:var(--danger); text-align: center; margin-top:15px; font-weight: bold; font-size: 0.85rem;"></p>
     </div>
 </div>
 
 <div class="container">
-    <!-- TRẠNG THÁI CHỜ -->
-    <div id="welcome-screen" class="p-30" style="text-align:center; padding: 150px 30px;">
-        <h2 style="color: #cbd5e1;">Đang tải dữ liệu hệ thống...</h2>
+    <div id="welcome-screen" class="p-30" style="text-align:center; padding: 100px 0;">
+        <h2 style="color: #cbd5e1;">Vui lòng đăng nhập để tiếp tục...</h2>
     </div>
 
-    <!-- MÀN HÌNH QUẢN TRỊ (ADMIN FULL FEATURES) -->
+    <!-- TOÀN BỘ TÍNH NĂNG ADMIN -->
     <div id="admin-screen" class="hidden p-30">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; padding-bottom:15px; border-bottom: 2px solid #f1f5f9;">
-            <h2 style="margin:0; color: var(--dark);">Bảng Quản Trị Hệ Thống</h2>
+        <div class="admin-header">
+            <h2 style="margin:0">🛠️ Quản Trị Viên</h2>
             <button class="btn btn-outline" onclick="location.reload()">Đăng xuất</button>
         </div>
-        
+
         <div class="admin-grid">
-            <!-- Cấu hình câu hỏi & Drive -->
+            <!-- 1. QUẢN LÝ ĐỀ THI -->
             <div class="card">
-                <h3 style="margin-top:0">⚙️ Cấu Hình Đề Thi</h3>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px">
+                <h3 style="margin-top:0">📝 Quản Lý Đề Thi</h3>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px">
                     <div>
-                        <span class="label">Số câu hỏi</span>
+                        <small>Số câu thi</small>
                         <input type="number" id="cfg-num" value="10">
                     </div>
                     <div>
-                        <span class="label">Thời gian (Phút)</span>
+                        <small>Thời gian (phút)</small>
                         <input type="number" id="cfg-time" value="15">
                     </div>
                 </div>
-                <button class="btn btn-admin" style="width:100%; margin-top:20px" onclick="syncDrive()">ĐỒNG BỘ CÂU HỎI TỪ GOOGLE DRIVE</button>
-                <div id="sync-status" class="status-tag">Trạng thái: Sẵn sàng</div>
+                <button class="btn btn-admin" style="width:100%; margin-top:15px" onclick="syncDrive()">
+                    🔄 ĐỒNG BỘ CÂU HỎI TỪ GOOGLE DRIVE
+                </button>
+                <p id="question-status" style="font-size: 0.8rem; color: #64748b; margin-top:10px;">Dữ liệu: 0 câu hỏi sẵn có.</p>
             </div>
 
-            <!-- Quản lý thí sinh -->
+            <!-- 2. QUẢN LÝ THÍ SINH (Thêm/Bớt) -->
             <div class="card" style="background: #f0f9ff;">
                 <h3 style="margin-top:0">👥 Quản Lý Thí Sinh</h3>
-                <span class="label">Thêm thí sinh mới (SBD)</span>
-                <div style="display:flex; gap:10px">
-                    <input type="text" id="new-sbd" placeholder="Ví dụ: SBD001" style="margin:0">
+                <div style="display:flex; gap:8px">
+                    <input type="text" id="new-sbd" placeholder="Nhập SBD mới..." style="margin:0">
                     <button class="btn btn-primary" onclick="addNewStudent()">THÊM</button>
                 </div>
-                <button class="btn btn-outline" style="width:100%; margin-top:15px" onclick="fetchStudentsFromCloud()">CẬP NHẬT DANH SÁCH TỪ CLOUD</button>
-                <div id="student-info" class="status-tag" style="background:#dbeafe">Tổng số thí sinh: 0</div>
+                
+                <div class="student-table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Số báo danh</th>
+                                <th style="text-align:right">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="student-list-body">
+                            <!-- Danh sách sẽ hiện ở đây -->
+                        </tbody>
+                    </table>
+                </div>
+                <button class="btn btn-outline" style="width:100%; margin-top:10px; font-size: 0.8rem;" onclick="fetchStudentsFromCloud()">
+                    ☁️ TẢI DANH SÁCH TỪ MÁY CHỦ
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- MÀN HÌNH THI (VỚI NÚT QUAY LẠI & REVIEW) -->
+    <!-- MÀN HÌNH LÀM BÀI -->
     <div id="quiz-screen" class="hidden">
-        <div class="quiz-header">
-            <div>Thí sinh: <strong id="display-sbd">---</strong></div>
-            <div id="timer" style="font-size: 1.8rem; font-weight: 700; color: #fbbf24; font-family: monospace;">00:00</div>
+        <div style="background: var(--dark); color: white; padding: 15px 30px; display:flex; justify-content: space-between; align-items:center;">
+            <span>SBD: <strong id="display-sbd">---</strong></span>
+            <div id="timer" style="font-size: 1.5rem; color: #fbbf24; font-weight:bold;">00:00</div>
         </div>
         <div class="p-30 quiz-layout">
-            <!-- Cột trái: Nội dung câu hỏi -->
             <div>
-                <div style="margin-bottom: 20px;">
-                    <span style="background: #e0e7ff; color: var(--primary); padding: 4px 12px; border-radius: 6px; font-weight: 700;">Câu hỏi <span id="q-idx">1</span></span>
-                </div>
-                <h3 id="q-text" style="line-height: 1.6; margin-bottom: 30px; font-size: 1.25rem;"></h3>
+                <h2 style="margin-top:0; color: var(--primary);">Câu <span id="q-idx">1</span></h2>
+                <h3 id="q-text" style="margin-bottom:20px; line-height:1.5"></h3>
                 <div id="options-box"></div>
-                
-                <div style="display:flex; gap: 20px; margin-top: 40px; border-top: 1px solid #f1f5f9; padding-top: 30px;">
-                    <button class="btn btn-outline" style="flex:1" onclick="changeQuestion(-1)">⬅️ CÂU TRƯỚC</button>
-                    <button class="btn btn-primary" style="flex:1" onclick="changeQuestion(1)">CÂU TIẾP THEO ➡️</button>
+                <div style="display:flex; gap:15px; margin-top:30px;">
+                    <button class="btn btn-outline" style="flex:1" onclick="changeQuestion(-1)">CÂU TRƯỚC</button>
+                    <button class="btn btn-primary" style="flex:1" onclick="changeQuestion(1)">CÂU TIẾP</button>
                 </div>
             </div>
-
-            <!-- Cột phải: Review Panel -->
-            <div class="review-panel">
-                <h4 style="margin:0 0 10px 0; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px;">Tiến độ bài làm</h4>
+            <div style="background:#f8fafc; padding:20px; border-radius:12px; border:1px solid #eee;">
+                <h4 style="margin-top:0">TIẾN ĐỘ</h4>
                 <div class="review-grid" id="review-grid"></div>
-                <hr style="margin: 25px 0; border: 0; border-top: 1px solid #e2e8f0;">
-                <button class="btn btn-danger" style="width:100%" onclick="confirmSubmission()">NỘP BÀI THI</button>
-                <p style="font-size: 0.75rem; color: #94a3b8; text-align: center; margin-top: 15px;">Hệ thống tự động lưu bài mỗi khi bạn chọn đáp án.</p>
+                <button class="btn btn-danger" style="width:100%; margin-top:30px" onclick="confirmSubmission()">NỘP BÀI</button>
             </div>
         </div>
     </div>
 
     <!-- MÀN HÌNH KẾT QUẢ -->
     <div id="result-screen" class="hidden p-30" style="text-align:center">
-        <div style="margin: 50px 0;">
-            <h2 style="color: #64748b;">KẾT QUẢ BÀI THI</h2>
-            <h1 id="res-score" style="font-size: 6rem; color: var(--primary); margin: 10px 0;">0/0</h1>
-            <p id="res-msg" style="font-weight: 700; color: var(--success);">Bài thi của bạn đã được gửi thành công!</p>
-        </div>
-        <button class="btn btn-primary" onclick="location.reload()">QUAY LẠI TRANG CHỦ</button>
+        <h2 style="color: #64748b;">KẾT QUẢ CỦA BẠN</h2>
+        <h1 id="res-score" style="font-size: 5rem; color: var(--primary);">0/0</h1>
+        <button class="btn btn-primary" onclick="location.reload()">QUAY LẠI</button>
     </div>
 </div>
 
 <script>
-    // THAY THẾ URL NÀY BẰNG URL WEB APP CỦA BẠN
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxDLzkl-dhmyTlPdsF4bxvX9ksrV51tzWZLFmWOg772Oz4g8f9umbfGLPRuJsoVLT9viQ/exec";
 
     let db_questions = JSON.parse(localStorage.getItem('db_questions')) || [];
@@ -157,100 +159,96 @@
 
     // --- XỬ LÝ ĐĂNG NHẬP ---
     function handleLogin() {
-        const user = document.getElementById('login-user').value.trim();
-        const pass = document.getElementById('login-pass').value.trim();
+        const u = document.getElementById('login-user').value.trim();
+        const p = document.getElementById('login-pass').value.trim();
         const msg = document.getElementById('login-msg');
 
-        if (!user || !pass) {
-            msg.innerText = "Vui lòng nhập đầy đủ Tài khoản & Mật khẩu!";
-            return;
-        }
-
-        // Quyền Admin: admin/admin
-        if (user === 'admin' && pass === 'admin') {
+        if(u === 'admin' && p === 'admin') {
             document.getElementById('login-modal').style.display = 'none';
-            updateStudentUI();
-            return switchScreen('admin-screen');
-        }
-
-        // Quyền Thí sinh: SBD/123
-        if (validStudents.length > 0 && !validStudents.includes(user)) {
-            msg.innerText = "Số báo danh không có trong danh sách!";
-            return;
-        }
-        
-        if (pass !== '123') {
-            msg.innerText = "Sai mật khẩu thí sinh! (Mặc định: 123)";
+            switchScreen('admin-screen');
+            renderStudentList();
+            updateAdminStats();
             return;
         }
 
-        document.getElementById('login-modal').style.display = 'none';
-        startQuiz(user);
+        if(validStudents.includes(u) && p === '123') {
+            document.getElementById('login-modal').style.display = 'none';
+            startQuiz(u);
+            return;
+        }
+        msg.innerText = "Sai tài khoản hoặc mật khẩu!";
     }
 
-    // --- CÁC TÍNH NĂNG ADMIN (PHỤC HỒI ĐẦY ĐỦ) ---
+    // --- TÍNH NĂNG ADMIN ---
     async function syncDrive() {
-        const status = document.getElementById('sync-status');
-        status.innerText = "⏳ Đang kết nối Drive...";
         try {
             const res = await fetch(SCRIPT_URL + "?action=syncDrive");
             db_questions = await res.json();
             localStorage.setItem('db_questions', JSON.stringify(db_questions));
-            status.innerText = "✅ Đã tải " + db_questions.length + " câu hỏi.";
-            alert("Đồng bộ câu hỏi thành công!");
-        } catch (e) { 
-            status.innerText = "❌ Lỗi kết nối!";
-            alert("Không thể kết nối với Google Drive. Kiểm tra SCRIPT_URL!"); 
-        }
+            updateAdminStats();
+            alert("Đã đồng bộ thành công " + db_questions.length + " câu hỏi!");
+        } catch(e) { alert("Lỗi kết nối API!"); }
     }
 
-    async function addNewStudent() {
+    function addNewStudent() {
         const sbd = document.getElementById('new-sbd').value.trim();
-        if (!sbd) return;
+        if(!sbd || validStudents.includes(sbd)) return;
         validStudents.push(sbd);
-        localStorage.setItem('db_students', JSON.stringify(validStudents));
-        updateStudentUI();
-        // Gửi lên Cloud để lưu trữ lâu dài
-        fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "addStudent", data: { sbd } }) });
+        saveStudents();
+        renderStudentList();
         document.getElementById('new-sbd').value = '';
+        // Lưu lên Cloud (Optional)
+        fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "addStudent", data: { sbd } }) });
+    }
+
+    function removeStudent(sbd) {
+        if(!confirm(`Xóa thí sinh ${sbd}?`)) return;
+        validStudents = validStudents.filter(item => item !== sbd);
+        saveStudents();
+        renderStudentList();
     }
 
     async function fetchStudentsFromCloud() {
-        const info = document.getElementById('student-info');
-        info.innerText = "⏳ Đang tải...";
         try {
             const res = await fetch(SCRIPT_URL + "?action=getStudents");
             validStudents = await res.json();
-            localStorage.setItem('db_students', JSON.stringify(validStudents));
-            updateStudentUI();
-        } catch (e) { alert("Lỗi tải danh sách thí sinh!"); }
+            saveStudents();
+            renderStudentList();
+        } catch(e) { alert("Lỗi tải danh sách!"); }
     }
 
-    function updateStudentUI() { 
-        document.getElementById('student-info').innerText = `Tổng số thí sinh: ${validStudents.length}`; 
+    function saveStudents() { localStorage.setItem('db_students', JSON.stringify(validStudents)); }
+
+    function renderStudentList() {
+        const tbody = document.getElementById('student-list-body');
+        tbody.innerHTML = validStudents.map(sbd => `
+            <tr>
+                <td><strong>${sbd}</strong></td>
+                <td style="text-align:right">
+                    <button class="btn btn-danger" style="padding:4px 8px; font-size:0.7rem;" onclick="removeStudent('${sbd}')">XÓA</button>
+                </td>
+            </tr>
+        `).join('');
     }
 
-    // --- TÍNH NĂNG LÀM BÀI THI ---
+    function updateAdminStats() {
+        document.getElementById('question-status').innerText = `Dữ liệu: ${db_questions.length} câu hỏi sẵn có.`;
+    }
+
+    // --- TÍNH NĂNG THI ---
     function startQuiz(sbd) {
         document.getElementById('display-sbd').innerText = sbd;
         const backup = localStorage.getItem('backup_' + sbd);
-        
-        if (backup && confirm("Hệ thống tìm thấy bài thi đang làm dở của bạn. Bạn muốn tiếp tục?")) {
+        if(backup && confirm("Phục hồi bài thi đang làm dở?")) {
             const data = JSON.parse(backup);
-            currentExam = data.currentExam;
-            userAnswers = data.userAnswers;
-            totalSec = data.totalSec;
-            currentIdx = data.currentIdx;
+            currentExam = data.currentExam; userAnswers = data.userAnswers;
+            totalSec = data.totalSec; currentIdx = data.currentIdx;
         } else {
-            const numLimit = parseInt(document.getElementById('cfg-num').value) || 10;
-            currentExam = [...db_questions].sort(() => 0.5 - Math.random()).slice(0, numLimit);
-            userAnswers = currentExam.map(q => ({ 
-                choice: null, 
-                correct: q.correct.toString().toLowerCase().trim() 
-            }));
+            const num = parseInt(document.getElementById('cfg-num').value) || 10;
+            currentExam = [...db_questions].sort(() => 0.5 - Math.random()).slice(0, num);
+            userAnswers = currentExam.map(q => ({ choice: null, correct: q.correct.toString().toLowerCase().trim() }));
             totalSec = (parseInt(document.getElementById('cfg-time').value) || 15) * 60;
         }
-        
         switchScreen('quiz-screen');
         runTimer();
         renderQuestion();
@@ -260,20 +258,14 @@
         const q = currentExam[currentIdx];
         document.getElementById('q-idx').innerText = currentIdx + 1;
         document.getElementById('q-text').innerText = q.q;
-        
         const box = document.getElementById('options-box');
         box.innerHTML = '';
-        
-        ['a','b','c','d'].forEach(key => {
-            if (q[key]) {
+        ['a','b','c','d'].forEach(k => {
+            if(q[k]) {
                 const div = document.createElement('div');
-                div.className = `option-card ${userAnswers[currentIdx].choice === key ? 'selected' : ''}`;
-                div.innerHTML = `<strong>${key.toUpperCase()}.</strong> ${q[key]}`;
-                div.onclick = () => { 
-                    userAnswers[currentIdx].choice = key; 
-                    saveProgress(); 
-                    renderQuestion(); 
-                };
+                div.className = `option-card ${userAnswers[currentIdx].choice === k ? 'selected' : ''}`;
+                div.innerHTML = `<b>${k.toUpperCase()}.</b> ${q[k]}`;
+                div.onclick = () => { userAnswers[currentIdx].choice = k; saveProgress(); renderQuestion(); };
                 box.appendChild(div);
             }
         });
@@ -281,40 +273,28 @@
     }
 
     function renderReviewGrid() {
-        const grid = document.getElementById('review-grid');
-        grid.innerHTML = userAnswers.map((ans, i) => `
+        document.getElementById('review-grid').innerHTML = userAnswers.map((ans, i) => `
             <div class="q-badge ${i === currentIdx ? 'current' : ''} ${ans.choice ? 'answered' : ''}" 
-                 onclick="jumpToQuestion(${i})">${i + 1}</div>
+                 onclick="currentIdx=${i};renderQuestion()">${i + 1}</div>
         `).join('');
     }
 
-    function jumpToQuestion(i) {
-        currentIdx = i;
-        renderQuestion();
-    }
-
     function changeQuestion(step) {
-        let next = currentIdx + step;
-        if (next >= 0 && next < currentExam.length) {
-            currentIdx = next;
-            renderQuestion();
-        }
+        let n = currentIdx + step;
+        if(n >= 0 && n < currentExam.length) { currentIdx = n; renderQuestion(); }
     }
 
     function saveProgress() {
         const sbd = document.getElementById('login-user').value;
-        localStorage.setItem('backup_' + sbd, JSON.stringify({ 
-            currentExam, userAnswers, totalSec, currentIdx 
-        }));
+        localStorage.setItem('backup_' + sbd, JSON.stringify({ currentExam, userAnswers, totalSec, currentIdx }));
     }
 
     function runTimer() {
         timerInterval = setInterval(() => {
             totalSec--;
-            let m = Math.floor(totalSec/60);
-            let s = totalSec%60;
+            const m = Math.floor(totalSec/60), s = totalSec%60;
             document.getElementById('timer').innerText = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-            if (totalSec <= 0) finalizeQuiz();
+            if(totalSec <= 0) finalizeQuiz();
         }, 1000);
     }
 
@@ -322,41 +302,20 @@
         clearInterval(timerInterval);
         const sbd = document.getElementById('login-user').value;
         localStorage.removeItem('backup_' + sbd);
-        
         let score = userAnswers.filter(a => a.choice === a.correct).length;
         document.getElementById('res-score').innerText = score + "/" + currentExam.length;
-        
         switchScreen('result-screen');
-        
-        // Gửi kết quả về Google Sheet
-        fetch(SCRIPT_URL, { 
-            method: "POST", 
-            mode: "no-cors", 
-            body: JSON.stringify({ 
-                action: "saveResult", 
-                data: { sbd, score: score + "/" + currentExam.length } 
-            }) 
-        });
+        fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "saveResult", data: { sbd, score: score + "/" + currentExam.length } }) });
     }
 
-    function confirmSubmission() {
-        const unanswered = userAnswers.filter(a => !a.choice).length;
-        let msg = "Bạn có chắc chắn muốn nộp bài?";
-        if(unanswered > 0) msg = `Bạn còn ${unanswered} câu chưa làm. Vẫn muốn nộp bài?`;
-        if(confirm(msg)) finalizeQuiz();
-    }
+    function confirmSubmission() { if(confirm("Nộp bài thi?")) finalizeQuiz(); }
 
     function switchScreen(id) {
-        ['welcome-screen', 'admin-screen', 'quiz-screen', 'result-screen'].forEach(s => {
-            document.getElementById(s).classList.add('hidden');
-        });
+        ['welcome-screen', 'admin-screen', 'quiz-screen', 'result-screen'].forEach(s => document.getElementById(s).classList.add('hidden'));
         document.getElementById(id).classList.remove('hidden');
     }
 
-    // Khởi tạo hiển thị
-    window.onload = () => {
-        if(validStudents.length > 0) updateStudentUI();
-    }
+    window.onload = () => { updateAdminStats(); };
 </script>
 </body>
 </html>
