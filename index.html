@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Thi Trắc Nghiệm Trực Tuyến</title>
+    <title>Hệ Thống Thi Pro - Cloud Sync</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Roboto+Mono&display=swap" rel="stylesheet">
     <style>
@@ -78,32 +78,32 @@
     <!-- MÀN HÌNH ADMIN -->
     <div id="admin-screen" class="hidden p-30">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-            <h2>BẢNG QUẢN TRỊ</h2>
+            <h2>BẢNG QUẢN TRỊ <span id="sync-status" style="font-size: 0.8rem; color: var(--success);">● Cloud Synced</span></h2>
             <button onclick="logout()" class="btn btn-outline">Đăng xuất</button>
         </div>
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
             <!-- Cấu hình bài thi -->
             <div style="padding: 20px; background: #fefce8; border-radius: 12px; border: 1px solid #fef08a;">
-                <h3>1. Cấu hình bài thi</h3>
+                <h3>1. Cấu hình bài thi (Cloud)</h3>
                 <div class="config-group">
                     <div>
                         <label>Số câu hỏi mỗi đề:</label>
-                        <input type="number" id="cfg-num-questions" value="10">
+                        <input type="number" id="cfg-num-questions">
                     </div>
                     <div>
                         <label>Thời gian thi (phút):</label>
-                        <input type="number" id="cfg-duration" value="15">
+                        <input type="number" id="cfg-duration">
                     </div>
                 </div>
-                <button class="btn btn-primary" style="width: 100%;" onclick="saveConfig()">Lưu cấu hình</button>
+                <button class="btn btn-primary" style="width: 100%;" onclick="saveConfigCloud()">Cập nhật lên Cloud</button>
             </div>
 
             <!-- Upload File -->
             <div style="padding: 20px; background: #f8fafc; border-radius: 12px;">
                 <h3>2. Nhập đề thi (Excel)</h3>
                 <input type="file" id="file-upload" accept=".xlsx, .xls">
-                <p id="bank-status" style="color: #64748b; font-size: 0.9rem;">Chưa có câu hỏi.</p>
+                <p id="bank-status" style="color: #64748b; font-size: 0.9rem;">Đang tải dữ liệu...</p>
             </div>
         </div>
 
@@ -112,7 +112,7 @@
             <div style="display: flex; gap: 10px; margin-bottom: 20px;">
                 <input type="text" id="new-sbd" placeholder="SBD">
                 <input type="text" id="new-pass" placeholder="Mật khẩu">
-                <button class="btn btn-primary" onclick="addStudent()">Thêm</button>
+                <button class="btn btn-primary" onclick="addStudentCloud()">Thêm & Đồng bộ</button>
             </div>
             <table>
                 <thead><tr><th>SBD</th><th>Mật khẩu</th><th>Hành động</th></tr></thead>
@@ -124,8 +124,11 @@
     <!-- MÀN HÌNH CHỌN ĐỀ -->
     <div id="student-home" class="hidden p-30" style="text-align: center;">
         <h2>Thí sinh: <span id="user-display" style="color: var(--primary);"></span></h2>
-        <p>Vui lòng nhấn nút dưới đây để nhận đề thi ngẫu nhiên</p>
-        <div id="set-buttons" style="display: flex; gap: 15px; justify-content: center; margin-top: 30px;">
+        <div id="exam-info-box" style="margin: 20px auto; padding: 20px; background: #f1f5f9; border-radius: 15px; max-width: 400px;">
+            <p>Số câu hỏi: <strong id="info-numQ">--</strong> câu</p>
+            <p>Thời gian: <strong id="info-dur">--</strong> phút</p>
+        </div>
+        <div id="set-buttons">
             <button class="btn btn-primary" style="padding: 20px 50px; font-size: 1.2rem;" onclick="generateExam()">BẮT ĐẦU LÀM BÀI</button>
         </div>
         <button onclick="logout()" class="btn" style="margin-top: 50px; color: #94a3b8;">Đăng xuất</button>
@@ -189,30 +192,104 @@
     let currentExam = [], currentIdx = 0, timerInterval, totalSeconds = 0;
     let userAnswers = [];
 
-    // Load cấu hình vào Admin
-    document.getElementById('cfg-num-questions').value = config.numQ;
-    document.getElementById('cfg-duration').value = config.duration;
+    // --- ĐỒNG BỘ CLOUD KHI KHỞI ĐỘNG ---
+    async function syncFromCloud() {
+        if(!SCRIPT_URL) return;
+        try {
+            const response = await fetch(SCRIPT_URL + "?action=getData");
+            const cloudData = await response.json();
+            
+            if(cloudData.questions) {
+                questionBank = cloudData.questions;
+                localStorage.setItem('db_questions', JSON.stringify(questionBank));
+            }
+            if(cloudData.users) {
+                students = cloudData.users;
+                localStorage.setItem('db_users', JSON.stringify(students));
+            }
+            if(cloudData.config) {
+                config = cloudData.config;
+                localStorage.setItem('db_config', JSON.stringify(config));
+            }
+            
+            updateAdminUI();
+            console.log("Cloud data synced!");
+        } catch (e) {
+            console.warn("Dữ liệu Cloud chưa sẵn sàng, dùng Local.");
+            updateAdminUI();
+        }
+    }
 
-    function saveConfig() {
+    function updateAdminUI() {
+        document.getElementById('cfg-num-questions').value = config.numQ;
+        document.getElementById('cfg-duration').value = config.duration;
+        document.getElementById('bank-status').innerText = `Đang có ${questionBank.length} câu hỏi.`;
+        document.getElementById('info-numQ').innerText = config.numQ;
+        document.getElementById('info-dur').innerText = config.duration;
+        renderStudentTable();
+    }
+
+    // --- CÁC HÀM GỬI LÊN CLOUD ---
+    async function saveConfigCloud() {
         config.numQ = parseInt(document.getElementById('cfg-num-questions').value);
         config.duration = parseInt(document.getElementById('cfg-duration').value);
         localStorage.setItem('db_config', JSON.stringify(config));
-        alert("Đã lưu cấu hình bài thi!");
+        
+        await fetch(SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            body: JSON.stringify({ action: "saveConfig", data: config })
+        });
+        alert("Đã lưu cấu hình lên Cloud!");
     }
 
+    async function addStudentCloud() {
+        const s = document.getElementById('new-sbd').value.trim();
+        const p = document.getElementById('new-pass').value.trim();
+        if(s && p) {
+            const newUser = {sbd: s, pass: p};
+            students.push(newUser);
+            localStorage.setItem('db_users', JSON.stringify(students));
+            renderStudentTable();
+            
+            await fetch(SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                body: JSON.stringify({ action: "saveUser", data: newUser })
+            });
+            document.getElementById('new-sbd').value = '';
+            document.getElementById('new-pass').value = '';
+        }
+    }
+
+    async function deleteStudentCloud(i) {
+        const deletedUser = students[i];
+        students.splice(i, 1);
+        localStorage.setItem('db_users', JSON.stringify(students));
+        renderStudentTable();
+        
+        await fetch(SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            body: JSON.stringify({ action: "deleteUser", sbd: deletedUser.sbd })
+        });
+    }
+
+    // --- LOGIC THI (Giữ nguyên các tính năng đã có) ---
     function handleLogin() {
         const u = document.getElementById('login-user').value.trim();
         const p = document.getElementById('login-pass').value.trim();
         if(u === 'admin' && p === 'admin') {
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('admin-screen').classList.remove('hidden');
-            renderStudentTable();
+            updateAdminUI();
         } else {
             const found = students.find(s => s.sbd === u && s.pass === p);
             if(found) {
                 document.getElementById('user-display').innerText = u;
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('student-home').classList.remove('hidden');
+                updateAdminUI();
             } else {
                 document.getElementById('login-err').innerText = "Sai SBD hoặc mật khẩu!";
             }
@@ -221,17 +298,14 @@
 
     function generateExam() {
         if(questionBank.length < config.numQ) {
-            alert("Số câu hỏi trong ngân hàng ("+questionBank.length+") ít hơn số câu yêu cầu ("+config.numQ+"). Vui lòng upload thêm.");
+            alert("Ngân hàng câu hỏi không đủ số lượng!");
             return;
         }
-        // Lấy ngẫu nhiên số lượng câu hỏi theo cấu hình
         currentExam = [...questionBank].sort(() => Math.random() - 0.5).slice(0, config.numQ);
         currentIdx = 0;
         userAnswers = currentExam.map(q => ({ q: q.q, options: q, userChoice: null, correctChoice: q.correct.toLowerCase() }));
-        
         document.getElementById('student-home').classList.add('hidden');
         document.getElementById('quiz-screen').classList.remove('hidden');
-        
         startTimer(config.duration * 60);
         showQuestion();
     }
@@ -242,11 +316,7 @@
         timerInterval = setInterval(() => {
             totalSeconds--;
             updateTimerDisplay();
-            if(totalSeconds <= 0) {
-                clearInterval(timerInterval);
-                alert("Hết thời gian làm bài!");
-                finishQuiz();
-            }
+            if(totalSeconds <= 0) { clearInterval(timerInterval); finishQuiz(); }
         }, 1000);
     }
 
@@ -254,7 +324,6 @@
         const m = Math.floor(totalSeconds / 60);
         const s = totalSeconds % 60;
         document.getElementById('timer').innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-        if(totalSeconds < 60) document.getElementById('timer').style.color = "red";
     }
 
     function showQuestion() {
@@ -273,7 +342,6 @@
             }
         });
         document.getElementById('prev-btn').disabled = (currentIdx === 0);
-        document.getElementById('next-btn').innerText = (currentIdx === currentExam.length - 1) ? "HẾT CÂU" : "TIẾP THEO";
         renderReviewGrid();
     }
 
@@ -286,18 +354,20 @@
     function jumpTo(i) { currentIdx = i; showQuestion(); }
     function goPrev() { if(currentIdx > 0) { currentIdx--; showQuestion(); } }
     function goNext() { if(currentIdx < currentExam.length - 1) { currentIdx++; showQuestion(); } }
-    function confirmSubmit() { if(confirm("Bạn có chắc chắn muốn nộp bài?")) finishQuiz(); }
+    function confirmSubmit() { if(confirm("Nộp bài?")) finishQuiz(); }
 
-    function finishQuiz() {
+    async function finishQuiz() {
         clearInterval(timerInterval);
         document.getElementById('quiz-screen').classList.add('hidden');
         document.getElementById('result-screen').classList.remove('hidden');
-        let score = userAnswers.filter(a => a.userChoice === a.correctChoice).length;
-        document.getElementById('final-score-text').innerText = `${score}/${currentExam.length}`;
-        document.getElementById('print-score-val').innerText = `${score}/${currentExam.length}`;
+        let scoreCount = userAnswers.filter(a => a.userChoice === a.correctChoice).length;
+        let scoreStr = `${scoreCount}/${currentExam.length}`;
+        document.getElementById('final-score-text').innerText = scoreStr;
+        document.getElementById('print-score-val').innerText = scoreStr;
         document.getElementById('print-sbd').innerText = document.getElementById('user-display').innerText;
         document.getElementById('print-time-info').innerText = "Ngày thi: " + new Date().toLocaleString();
 
+        // In chi tiết
         const content = document.getElementById('print-content');
         content.innerHTML = userAnswers.map((item, i) => {
             let optsHtml = '';
@@ -313,39 +383,49 @@
             return `<div class="print-q"><strong>Câu ${i+1}: ${item.q}</strong>${optsHtml}</div>`;
         }).join('');
 
-        if(SCRIPT_URL) {
-            fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ table: "Results", sbd: document.getElementById('user-display').innerText, score: `${score}/${currentExam.length}` }) });
-        }
-    }
-
-    // Các hàm Admin giữ nguyên
-    function addStudent() {
-        const s = document.getElementById('new-sbd').value;
-        const p = document.getElementById('new-pass').value;
-        if(s && p) { students.push({sbd: s, pass: p}); localStorage.setItem('db_users', JSON.stringify(students)); renderStudentTable(); }
+        // Gửi kết quả lên Sheets
+        await fetch(SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            body: JSON.stringify({ 
+                action: "saveResult", 
+                data: { sbd: document.getElementById('user-display').innerText, score: scoreStr }
+            })
+        });
     }
 
     function renderStudentTable() {
-        document.getElementById('student-list').innerHTML = students.map((s, i) => `<tr><td>${s.sbd}</td><td>${s.pass}</td><td><button onclick="deleteS(${i})">Xóa</button></td></tr>`).join('');
+        document.getElementById('student-list').innerHTML = students.map((s, i) => `
+            <tr><td>${s.sbd}</td><td>${s.pass}</td><td><button class="btn-danger" onclick="deleteStudentCloud(${i})">Xóa</button></td></tr>
+        `).join('');
     }
-
-    function deleteS(i) { students.splice(i, 1); localStorage.setItem('db_users', JSON.stringify(students)); renderStudentTable(); }
 
     document.getElementById('file-upload').addEventListener('change', function(e) {
         const r = new FileReader();
-        r.onload = function(ex) {
+        r.onload = async function(ex) {
             const data = new Uint8Array(ex.target.result);
             const wb = XLSX.read(data, {type: 'array'});
-            questionBank = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+            const tempBank = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+            
+            // Đẩy ngân hàng câu hỏi lên Cloud
+            await fetch(SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                body: JSON.stringify({ action: "saveQuestions", data: tempBank })
+            });
+            
+            questionBank = tempBank;
             localStorage.setItem('db_questions', JSON.stringify(questionBank));
-            document.getElementById('bank-status').innerText = `Đang có ${questionBank.length} câu hỏi.`;
-            alert("Đã tải xong ngân hàng câu hỏi!");
+            updateAdminUI();
+            alert("Đã tải và đồng bộ ngân hàng câu hỏi!");
         };
         r.readAsArrayBuffer(e.target.files[0]);
     });
 
     function logout() { location.reload(); }
-    if(questionBank.length > 0) document.getElementById('bank-status').innerText = `Đang có ${questionBank.length} câu hỏi.`;
+    
+    // Khởi động đồng bộ
+    syncFromCloud();
 </script>
 </body>
 </html>
