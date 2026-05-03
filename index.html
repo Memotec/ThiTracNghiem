@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Thi Trắc Nghiệm - Cloud Sync</title>
+    <title>Hệ Thống Thi Trắc Nghiệm - Professional Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #4f46e5; --success: #22c55e; --danger: #ef4444; --dark: #1e293b; --bg: #f1f5f9; }
@@ -20,33 +20,44 @@
         
         input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-family: inherit; }
 
-        /* MODAL ĐĂNG NHẬP */
-        #login-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.98); display: flex; align-items: center; justify-content: center; z-index: 2000; }
-        .modal-content { background: white; padding: 40px; border-radius: 20px; width: 90%; max-width: 400px; }
-        
         /* ADMIN DASHBOARD */
         .admin-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; }
         .card { background: #fff; border: 1px solid #e2e8f0; padding: 25px; border-radius: 12px; }
         
-        /* BẢNG DANH SÁCH THÍ SINH CLOUD */
+        /* BẢNG DANH SÁCH THÍ SINH */
         .student-list-area { margin-top: 15px; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; }
         .table-scroll { max-height: 280px; overflow-y: auto; }
         table { width: 100%; border-collapse: collapse; background: white; font-size: 0.85rem; }
         th { background: #f8fafc; padding: 12px; text-align: left; border-bottom: 2px solid #edf2f7; position: sticky; top: 0; color: #64748b; }
         td { padding: 10px 12px; border-bottom: 1px solid #edf2f7; }
-        .sbd-tag { font-weight: bold; color: var(--primary); }
 
         /* QUIZ & KẾT QUẢ */
+        #login-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.98); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+        .modal-content { background: white; padding: 40px; border-radius: 20px; width: 90%; max-width: 400px; }
         .quiz-layout { display: grid; grid-template-columns: 1fr 320px; gap: 25px; }
         .option-card { padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; margin-bottom: 10px; cursor: pointer; }
         .option-card.selected { background: var(--primary); color: white; border-color: var(--primary); }
         .review-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 15px; }
         .q-badge { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid #cbd5e1; cursor: pointer; font-weight: bold; }
         .q-badge.answered { background: var(--primary); color: white; }
+
+        /* STYLE DÀNH RIÊNG CHO BẢN IN SOP */
+        @media print {
+            body * { visibility: hidden; }
+            #print-area, #print-area * { visibility: visible; }
+            #print-area { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; font-family: "Times New Roman", serif; }
+            .no-print { display: none !important; }
+            .sop-header { border-bottom: 2px solid #000; margin-bottom: 20px; display: flex; justify-content: space-between; }
+            .sop-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+            .sop-table th, .sop-table td { border: 1px solid #000; padding: 8px; text-align: left; }
+            .correct-ans { color: green; font-weight: bold; }
+            .wrong-ans { color: red; text-decoration: line-through; }
+        }
     </style>
 </head>
 <body>
 
+<!-- MÀN HÌNH ĐĂNG NHẬP -->
 <div id="login-modal">
     <div class="modal-content">
         <h2 style="text-align:center; color: var(--primary); margin-top:0;">HỆ THỐNG THI</h2>
@@ -60,56 +71,41 @@
 <div class="container">
     <!-- MÀN HÌNH ADMIN -->
     <div id="admin-screen" class="hidden p-30">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px;">
-            <h2 style="margin:0">🛠️ Quản Trị Hệ Thống</h2>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2>🛠️ Quản Trị Hệ Thống</h2>
             <button class="btn btn-outline" onclick="location.reload()">Đăng xuất</button>
         </div>
-
         <div class="admin-grid">
-            <div class="card" style="height: fit-content;">
-                <h3 style="margin-top:0">📝 Cấu Hình Đề</h3>
+            <div class="card">
+                <h3>📝 Cấu Hình Đề</h3>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px">
                     <div><small>Số câu hỏi</small><input type="number" id="cfg-num" value="10"></div>
                     <div><small>Thời gian (phút)</small><input type="number" id="cfg-time" value="15"></div>
                 </div>
                 <button class="btn btn-admin" style="width:100%; margin-top:15px" onclick="syncDrive()">🔄 ĐỒNG BỘ CÂU HỎI DRIVE</button>
-                <div id="sync-status" style="font-size: 0.75rem; margin-top:8px; color: #64748b;">Trạng thái: Sẵn sàng.</div>
+                <div id="sync-status" style="font-size: 0.75rem; margin-top:8px;">Trạng thái: Sẵn sàng.</div>
             </div>
 
-            <div class="card" style="background: #f0f9ff; border: 1px solid #bae6fd;">
-                <h3 style="margin-top:0; color: #0369a1; display: flex; justify-content: space-between;">
-                    👥 Quản Lý Thí Sinh
-                    <span id="student-total" style="font-size: 0.8rem; background: #0ea5e9; color: white; padding: 2px 8px; border-radius: 10px;">0</span>
-                </h3>
-                
-                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
+            <div class="card" style="background: #f0f9ff;">
+                <h3 style="margin:0">👥 Quản Lý Thí Sinh <span id="student-total" style="float:right">0</span></h3>
+                <div style="margin: 15px 0;">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                        <input type="text" id="new-sbd" placeholder="Số báo danh...">
+                        <input type="text" id="new-sbd" placeholder="SBD...">
                         <input type="text" id="new-pass" placeholder="Mật khẩu...">
                     </div>
                     <input type="text" id="new-name" placeholder="Họ và tên thí sinh...">
-                    <button class="btn btn-primary" onclick="addNewStudent()" style="width:100%; margin-top: 5px;">➕ THÊM & ĐỒNG BỘ CLOUD</button>
+                    <button class="btn btn-primary" onclick="addNewStudent()" style="width:100%; margin-top: 5px;">➕ THÊM & ĐỒNG BỘ</button>
                 </div>
-
                 <div class="student-list-area">
                     <div class="table-scroll">
                         <table>
-                            <thead>
-                                <tr>
-                                    <th>SBD</th>
-                                    <th>Họ và Tên</th>
-                                    <th>Mật khẩu</th>
-                                    <th style="text-align:right">Thao tác</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>SBD</th><th>Họ Tên</th><th>MK</th><th>Xóa</th></tr></thead>
                             <tbody id="student-list-body"></tbody>
                         </table>
                     </div>
                 </div>
-                
-                <div style="margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <button class="btn btn-outline" style="font-size: 0.8rem;" onclick="fetchStudentsFromCloud()">☁️ TẢI TỪ CLOUD</button>
-                    <button class="btn btn-danger" style="font-size: 0.8rem; background: #fca5a5;" onclick="clearAllStudents()">🗑️ XÓA TẤT CẢ</button>
+                <div style="margin-top: 10px; display: flex; gap: 10px;">
+                    <button class="btn btn-outline" style="flex:1" onclick="fetchStudentsFromCloud()">☁️ TẢI CLOUD</button>
                 </div>
             </div>
         </div>
@@ -123,32 +119,74 @@
         </div>
         <div class="p-30 quiz-layout">
             <div id="question-container">
-                <h2 style="margin-top:0; color: var(--primary);">Câu <span id="q-idx">1</span></h2>
-                <h3 id="q-text" style="margin-bottom:20px; line-height:1.4"></h3>
+                <h2 style="color: var(--primary);">Câu <span id="q-idx">1</span></h2>
+                <h3 id="q-text" style="margin-bottom:20px;"></h3>
                 <div id="options-box"></div>
                 <div style="display:flex; gap:15px; margin-top:30px;">
                     <button class="btn btn-outline" style="flex:1" onclick="changeQuestion(-1)">QUAY LẠI</button>
                     <button class="btn btn-primary" style="flex:1" onclick="changeQuestion(1)">TIẾP THEO</button>
                 </div>
             </div>
-            <div style="background:#f8fafc; padding:20px; border-radius:12px; border:1px solid #eee;">
-                <h4 style="margin-top:0">TIẾN ĐỘ</h4>
+            <div style="background:#f8fafc; padding:20px; border-radius:12px;">
+                <h4>TIẾN ĐỘ</h4>
                 <div class="review-grid" id="review-grid"></div>
                 <button class="btn btn-danger" style="width:100%; margin-top:30px" onclick="confirmSubmission()">NỘP BÀI</button>
             </div>
         </div>
     </div>
 
+    <!-- MÀN HÌNH KẾT QUẢ & XUẤT BẢN IN -->
     <div id="result-screen" class="hidden p-30" style="text-align:center">
-        <h1 id="res-score" style="font-size: 5rem; color: var(--primary); margin-bottom:0;">0/0</h1>
-        <p>Kết quả thi của bạn đã được ghi nhận.</p>
-        <button class="btn btn-primary" onclick="location.reload()">QUAY LẠI</button>
+        <div id="result-header">
+            <h1 id="res-score" style="font-size: 5rem; color: var(--primary); margin-bottom:0;">0/0</h1>
+            <p style="font-size: 1.2rem;">Kết quả bài thi trắc nghiệm</p>
+            <div style="display:flex; justify-content:center; gap:15px; margin-top:20px;">
+                <button class="btn btn-primary" onclick="location.reload()">HÀNH ĐỘNG MỚI</button>
+                <button class="btn btn-admin" style="background:#10b981" onclick="window.print()">🖨️ XUẤT BẢN IN (SOP Standard)</button>
+            </div>
+        </div>
+        
+        <!-- VÙNG DỮ LIỆU ĐỂ IN (SOP) -->
+        <div id="print-area" class="hidden">
+            <div class="sop-header">
+                <div style="text-align:left">
+                    <h2 style="margin:0">BÁO CÁO KẾT QUẢ BÀI THI</h2>
+                    <p>Mã tài liệu: SOP-EXAM-01</p>
+                </div>
+                <div style="text-align:right">
+                    <p>Ngày thi: <span id="print-date"></span></p>
+                    <p>Giờ nộp: <span id="print-time"></span></p>
+                </div>
+            </div>
+
+            <table class="sop-table">
+                <tr>
+                    <th>Họ và tên thí sinh:</th>
+                    <td id="p-name"></td>
+                    <th>Số báo danh:</th>
+                    <td id="p-sbd"></td>
+                </tr>
+                <tr>
+                    <th>Số câu đúng:</th>
+                    <td id="p-correct"></td>
+                    <th>Tổng điểm (%):</th>
+                    <td id="p-percent"></td>
+                </tr>
+            </table>
+
+            <h3 style="border-bottom: 1px solid #000;">CHI TIẾT BÀI LÀM</h3>
+            <div id="print-details" style="text-align:left;"></div>
+
+            <div style="margin-top: 50px; display: flex; justify-content: space-around;">
+                <div style="text-align:center"> Thí sinh ký tên<br><br><br>(Ký và ghi rõ họ tên)</div>
+                <div style="text-align:center"> Quản trị viên/Giám thị<br><br><br>(Xác nhận hệ thống)</div>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxDLzkl-dhmyTlPdsF4bxvX9ksrV51tzWZLFmWOg772Oz4g8f9umbfGLPRuJsoVLT9viQ/exec"; // Thay URL Google Script tại đây
-
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxDLzkl-dhmyTlPdsF4bxvX9ksrV51tzWZLFmWOg772Oz4g8f9umbfGLPRuJsoVLT9viQ/exec";
     let db_questions = JSON.parse(localStorage.getItem('db_questions')) || [];
     let validStudents = JSON.parse(localStorage.getItem('db_students')) || [];
     let currentExam = [], userAnswers = [], currentIdx = 0, timerInterval, totalSec = 0;
@@ -156,122 +194,53 @@
 
     window.onload = () => { renderStudentList(); };
 
-    // --- QUẢN LÝ ĐĂNG NHẬP ---
+    // --- LOGIC ĐĂNG NHẬP ---
     function handleLogin() {
         const u = document.getElementById('login-user').value.trim();
         const p = document.getElementById('login-pass').value.trim();
-        if(u === 'admin' && p === 'admin') {
-            document.getElementById('login-modal').style.display = 'none';
-            switchScreen('admin-screen');
-            return;
-        }
-        const student = validStudents.find(s => s.sbd === u && s.pass === p);
-        if(student) {
-            currentUser = student;
-            document.getElementById('login-modal').style.display = 'none';
-            startQuiz(student);
-        } else {
-            document.getElementById('login-msg').innerText = "Sai thông tin đăng nhập!";
-        }
+        if(u === 'admin' && p === 'admin') { document.getElementById('login-modal').style.display = 'none'; switchScreen('admin-screen'); return; }
+        const s = validStudents.find(x => x.sbd === u && x.pass === p);
+        if(s) { currentUser = s; document.getElementById('login-modal').style.display = 'none'; startQuiz(s); }
+        else { document.getElementById('login-msg').innerText = "Sai thông tin!"; }
     }
 
-    // --- QUẢN LÝ THÍ SINH (CLOUD SYNC) ---
-    async function addNewStudent() {
-        const sbd = document.getElementById('new-sbd').value.trim();
-        const name = document.getElementById('new-name').value.trim();
-        const pass = document.getElementById('new-pass').value.trim();
-
-        if(!sbd || !name || !pass) { alert("Nhập đủ thông tin!"); return; }
-        if(validStudents.find(s => s.sbd === sbd)) { alert("SBD đã tồn tại!"); return; }
-
-        const newStudent = { sbd, name, pass };
-        validStudents.push(newStudent);
-        saveStudentsLocal();
-        renderStudentList();
-
-        // Đồng bộ lên Cloud
-        try {
-            await fetch(SCRIPT_URL, {
-                method: "POST",
-                mode: "no-cors",
-                body: JSON.stringify({ action: "addStudent", data: newStudent })
-            });
-            console.log("Đã đồng bộ Cloud");
-        } catch(e) { console.error("Lỗi đồng bộ Cloud"); }
-
-        document.getElementById('new-sbd').value = '';
-        document.getElementById('new-name').value = '';
-        document.getElementById('new-pass').value = '';
-    }
-
-    async function removeStudent(sbd) {
-        if(!confirm(`Xóa thí sinh ${sbd}?`)) return;
-        validStudents = validStudents.filter(s => s.sbd !== sbd);
-        saveStudentsLocal();
-        renderStudentList();
-
-        // Đồng bộ xóa lên Cloud
-        try {
-            await fetch(SCRIPT_URL, {
-                method: "POST",
-                mode: "no-cors",
-                body: JSON.stringify({ action: "deleteStudent", sbd: sbd })
-            });
-        } catch(e) { console.error("Lỗi xóa Cloud"); }
-    }
-
-    async function fetchStudentsFromCloud() {
-        const btn = event.target;
-        btn.innerText = "⏳ Đang tải...";
-        try {
-            const res = await fetch(SCRIPT_URL + "?action=getStudents");
-            const data = await res.json();
-            if(Array.isArray(data)) {
-                validStudents = data;
-                saveStudentsLocal();
-                renderStudentList();
-                alert("Đã tải dữ liệu mới nhất từ Cloud!");
-            }
-        } catch(e) { alert("Lỗi tải Cloud!"); }
-        btn.innerText = "☁️ TẢI TỪ CLOUD";
-    }
-
-    function clearAllStudents() {
-        if(confirm("Xóa toàn bộ danh sách?")) {
-            validStudents = [];
-            saveStudentsLocal();
-            renderStudentList();
-        }
-    }
-
+    // --- QUẢN LÝ THÍ SINH ---
     function renderStudentList() {
-        const tbody = document.getElementById('student-list-body');
-        tbody.innerHTML = '';
+        const b = document.getElementById('student-list-body'); b.innerHTML = '';
         validStudents.forEach(s => {
-            tbody.innerHTML += `<tr>
-                <td><span class="sbd-tag">${s.sbd}</span></td>
-                <td>${s.name}</td>
-                <td><code>${s.pass}</code></td>
-                <td style="text-align:right">
-                    <button onclick="removeStudent('${s.sbd}')" style="background:none; border:none; color:var(--danger); cursor:pointer;">✕ Xóa</button>
-                </td>
-            </tr>`;
+            b.innerHTML += `<tr><td>${s.sbd}</td><td>${s.name}</td><td>${s.pass}</td>
+                <td><button onclick="removeStudent('${s.sbd}')" style="color:red; border:none; background:none; cursor:pointer;">✕</button></td></tr>`;
         });
         document.getElementById('student-total').innerText = validStudents.length;
     }
-
+    function addNewStudent() {
+        const sbd = document.getElementById('new-sbd').value.trim(), name = document.getElementById('new-name').value.trim(), pass = document.getElementById('new-pass').value.trim();
+        if(!sbd || !name || !pass) return alert("Thiếu thông tin");
+        validStudents.push({sbd, name, pass}); saveStudentsLocal(); renderStudentList();
+        fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "addStudent", data: {sbd, name, pass} }) });
+    }
+    function removeStudent(sbd) {
+        validStudents = validStudents.filter(x => x.sbd !== sbd); saveStudentsLocal(); renderStudentList();
+        fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "deleteStudent", sbd: sbd }) });
+    }
     function saveStudentsLocal() { localStorage.setItem('db_students', JSON.stringify(validStudents)); }
+    async function fetchStudentsFromCloud() {
+        try {
+            const res = await fetch(SCRIPT_URL + "?action=getStudents");
+            const data = await res.json();
+            if(Array.isArray(data)) { validStudents = data; saveStudentsLocal(); renderStudentList(); alert("Đã cập nhật từ Cloud"); }
+        } catch(e) { alert("Lỗi tải Cloud"); }
+    }
 
-    // --- LOGIC THI & ĐỒNG BỘ CÂU HỎI DRIVE ---
+    // --- LOGIC THI ---
     async function syncDrive() {
-        const stt = document.getElementById('sync-status');
-        stt.innerText = "⏳ Đang kết nối Drive...";
+        const s = document.getElementById('sync-status'); s.innerText = "⏳ Đang tải...";
         try {
             const res = await fetch(SCRIPT_URL + "?action=syncDrive");
             db_questions = await res.json();
             localStorage.setItem('db_questions', JSON.stringify(db_questions));
-            stt.innerText = `✅ Đã tải ${db_questions.length} câu hỏi.`;
-        } catch(e) { stt.innerText = "❌ Lỗi Drive!"; }
+            s.innerText = `✅ Đã tải ${db_questions.length} câu.`;
+        } catch(e) { s.innerText = "❌ Lỗi kết nối!"; }
     }
 
     function startQuiz(student) {
@@ -281,17 +250,14 @@
         currentExam = [...db_questions].sort(() => 0.5 - Math.random()).slice(0, num);
         userAnswers = currentExam.map(q => ({ choice: null, correct: q.correct.toString().toLowerCase().trim() }));
         totalSec = (parseInt(document.getElementById('cfg-time').value) || 15) * 60;
-        switchScreen('quiz-screen');
-        runTimer();
-        renderQuestion();
+        switchScreen('quiz-screen'); runTimer(); renderQuestion();
     }
 
     function renderQuestion() {
         const q = currentExam[currentIdx];
         document.getElementById('q-idx').innerText = currentIdx + 1;
         document.getElementById('q-text').innerText = q.q;
-        const box = document.getElementById('options-box');
-        box.innerHTML = '';
+        const box = document.getElementById('options-box'); box.innerHTML = '';
         ['a','b','c','d'].forEach(k => {
             if(q[k]) {
                 const div = document.createElement('div');
@@ -307,8 +273,7 @@
     function renderReviewGrid() {
         document.getElementById('review-grid').innerHTML = userAnswers.map((ans, i) => `
             <div class="q-badge ${i === currentIdx ? 'current' : ''} ${ans.choice ? 'answered' : ''}" 
-                 onclick="currentIdx=${i};renderQuestion()">${i + 1}</div>
-        `).join('');
+                 onclick="currentIdx=${i};renderQuestion()">${i + 1}</div>`).join('');
     }
 
     function changeQuestion(step) {
@@ -325,15 +290,43 @@
         }, 1000);
     }
 
+    function confirmSubmission() { if(confirm("Bạn muốn nộp bài?")) finalizeQuiz(); }
+
+    // --- KẾT QUẢ & XUẤT BẢN IN ---
     function finalizeQuiz() {
         clearInterval(timerInterval);
         let score = userAnswers.filter(a => a.choice === a.correct).length;
         document.getElementById('res-score').innerText = score + "/" + currentExam.length;
+        
+        preparePrintData(score); // Chuẩn bị dữ liệu SOP trước khi in
         switchScreen('result-screen');
         fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "saveResult", data: { sbd: currentUser.sbd, score: score } }) });
     }
 
-    function confirmSubmission() { if(confirm("Nộp bài thi?")) finalizeQuiz(); }
+    function preparePrintData(score) {
+        const now = new Date();
+        document.getElementById('print-date').innerText = now.toLocaleDateString('vi-VN');
+        document.getElementById('print-time').innerText = now.toLocaleTimeString('vi-VN');
+        document.getElementById('p-name').innerText = currentUser.name;
+        document.getElementById('p-sbd').innerText = currentUser.sbd;
+        document.getElementById('p-correct').innerText = score + "/" + currentExam.length;
+        document.getElementById('p-percent').innerText = ((score/currentExam.length)*100).toFixed(1) + "%";
+
+        let detailHTML = '';
+        currentExam.forEach((q, i) => {
+            const userAns = userAnswers[i].choice || "Không trả lời";
+            const isCorrect = userAnswers[i].choice === userAnswers[i].correct;
+            detailHTML += `
+                <div style="margin-bottom: 15px; padding: 10px; border-bottom: 1px dashed #ccc;">
+                    <strong>Câu ${i+1}: ${q.q}</strong><br>
+                    <span>- Đáp án đúng: <span class="correct-ans">${userAnswers[i].correct.toUpperCase()}</span></span><br>
+                    <span>- Bài làm của thí sinh: <span class="${isCorrect ? 'correct-ans' : 'wrong-ans'}">${userAns.toUpperCase()}</span> 
+                    (${isCorrect ? 'Đúng' : 'Sai'})</span>
+                </div>`;
+        });
+        document.getElementById('print-details').innerHTML = detailHTML;
+    }
+
     function switchScreen(id) {
         ['admin-screen', 'quiz-screen', 'result-screen'].forEach(s => document.getElementById(s).classList.add('hidden'));
         document.getElementById(id).classList.remove('hidden');
