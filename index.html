@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Thi Trắc Nghiệm Pro</title>
+    <title>Hệ Thống Thi Trắc Nghiệm Pro - Account Update</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #4f46e5; --success: #22c55e; --danger: #ef4444; --dark: #1e293b; --bg: #f1f5f9; }
@@ -12,7 +12,6 @@
         .hidden { display: none !important; }
         .p-30 { padding: 30px; }
         
-        /* Button Styles */
         .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; transition: 0.3s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-admin { background: #0ea5e9; color: white; }
@@ -21,21 +20,21 @@
         
         input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-family: inherit; }
 
-        /* --- CỬA SỔ ĐĂNG NHẬP (MODAL) --- */
+        /* MODAL ĐĂNG NHẬP */
         #login-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.98); display: flex; align-items: center; justify-content: center; z-index: 2000; }
         .modal-content { background: white; padding: 40px; border-radius: 20px; width: 90%; max-width: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
         
-        /* --- ADMIN DASHBOARD --- */
+        /* ADMIN DASHBOARD */
         .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .card { background: #fff; border: 1px solid #e2e8f0; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
-        .student-table-container { margin-top: 15px; max-height: 250px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; }
+        .card { background: #fff; border: 1px solid #e2e8f0; padding: 25px; border-radius: 12px; }
+        .student-table-container { margin-top: 15px; max-height: 300px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; }
         table { width: 100%; border-collapse: collapse; }
-        th { background: #f8fafc; position: sticky; top: 0; padding: 12px 10px; text-align: left; border-bottom: 2px solid #eee; font-size: 0.85rem; }
-        td { padding: 10px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        th { background: #f8fafc; position: sticky; top: 0; padding: 12px 10px; text-align: left; border-bottom: 2px solid #eee; font-size: 0.8rem; }
+        td { padding: 10px; border-bottom: 1px solid #eee; font-size: 0.85rem; }
 
-        /* --- QUIZ INTERFACE --- */
+        /* QUIZ INTERFACE */
         .quiz-layout { display: grid; grid-template-columns: 1fr 320px; gap: 25px; }
-        .option-card { padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
+        .option-card { padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; margin-bottom: 10px; cursor: pointer; }
         .option-card.selected { background: var(--primary); color: white; border-color: var(--primary); }
         .review-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 15px; }
         .q-badge { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid #cbd5e1; cursor: pointer; font-weight: bold; }
@@ -45,67 +44,66 @@
 </head>
 <body>
 
-<!-- MÀN HÌNH ĐĂNG NHẬP -->
 <div id="login-modal">
     <div class="modal-content">
-        <h2 style="text-align:center; color: var(--primary); margin-top:0;">ĐĂNG NHẬP</h2>
-        <label style="font-weight:bold; font-size: 0.8rem;">TÊN ĐĂNG NHẬP (SBD)</label>
-        <input type="text" id="login-user" placeholder="admin hoặc SBD của bạn">
-        <label style="font-weight:bold; font-size: 0.8rem;">MẬT KHẨU</label>
+        <h2 style="text-align:center; color: var(--primary); margin-top:0;">HỆ THỐNG THI</h2>
+        <label style="font-weight:bold; font-size: 0.75rem; color: #64748b;">SỐ BÁO DANH (USER)</label>
+        <input type="text" id="login-user" placeholder="Nhập SBD...">
+        <label style="font-weight:bold; font-size: 0.75rem; color: #64748b;">MẬT KHẨU</label>
         <input type="password" id="login-pass" placeholder="••••••••">
-        <button class="btn btn-primary" style="width:100%; margin-top: 20px;" onclick="handleLogin()">VÀO HỆ THỐNG</button>
-        <p id="login-msg" style="color:var(--danger); text-align: center; margin-top:15px; font-weight: bold; font-size: 0.85rem;"></p>
+        <button class="btn btn-primary" style="width:100%; margin-top: 20px;" onclick="handleLogin()">ĐĂNG NHẬP</button>
+        <p id="login-msg" style="color:var(--danger); text-align: center; margin-top:15px; font-weight: bold; font-size: 0.8rem;"></p>
     </div>
 </div>
 
 <div class="container">
-    <!-- MÀN HÌNH ADMIN -->
     <div id="admin-screen" class="hidden p-30">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; border-bottom: 2px solid #f1f5f9; padding-bottom:15px;">
-            <h2 style="margin:0">🛠️ Bảng Điều Khiển Admin</h2>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom: 2px solid #f1f5f9; padding-bottom:15px;">
+            <h2 style="margin:0">🛠️ Quản Trị Viên</h2>
             <button class="btn btn-outline" onclick="location.reload()">Đăng xuất</button>
         </div>
 
         <div class="admin-grid">
-            <!-- QUẢN LÝ ĐỀ THI -->
             <div class="card">
-                <h3 style="margin-top:0">📝 Thiết Lập Đề Thi</h3>
+                <h3 style="margin-top:0">📝 Cấu Hình Đề</h3>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px">
-                    <div><small>Số câu thi</small><input type="number" id="cfg-num" value="10"></div>
+                    <div><small>Số câu hỏi</small><input type="number" id="cfg-num" value="10"></div>
                     <div><small>Thời gian (phút)</small><input type="number" id="cfg-time" value="15"></div>
                 </div>
                 <button class="btn btn-admin" style="width:100%; margin-top:15px" onclick="syncDrive()">🔄 ĐỒNG BỘ CÂU HỎI DRIVE</button>
-                <div id="sync-status" style="font-size: 0.8rem; margin-top:10px; color: #64748b;">Sẵn sàng.</div>
+                <div id="sync-status" style="font-size: 0.75rem; margin-top:8px; color: #64748b;">Sẵn sàng.</div>
             </div>
 
-            <!-- CẬP NHẬT TRỰC TIẾP: QUẢN LÝ THÍ SINH -->
+            <!-- CẬP NHẬT: QUẢN LÝ THÍ SINH (TÊN + MẬT KHẨU) -->
             <div class="card" style="background: #f0f9ff; border: 1px solid #bae6fd;">
-                <h3 style="margin-top:0; color: #0369a1; display: flex; justify-content: space-between; align-items: center;">
-                    👥 Quản Lý Thí Sinh
-                    <span id="student-count" style="font-size: 0.8rem; background: #0ea5e9; color: white; padding: 2px 10px; border-radius: 10px;">0</span>
+                <h3 style="margin-top:0; color: #0369a1; display:flex; justify-content:space-between;">
+                    👥 Thí Sinh 
+                    <span id="student-count" style="font-size: 0.8rem; background: #0ea5e9; color: white; padding: 2px 8px; border-radius: 10px;">0</span>
                 </h3>
                 
-                <div style="display:flex; gap:8px; margin-bottom: 12px;">
-                    <input type="text" id="new-sbd" placeholder="Nhập SBD..." style="margin:0; border-color: #7dd3fc;">
-                    <button class="btn btn-primary" onclick="addNewStudent()">THÊM</button>
+                <div style="background: white; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <input type="text" id="new-sbd" placeholder="Số báo danh (Username)..." style="font-size: 0.8rem; margin: 4px 0;">
+                    <input type="text" id="new-name" placeholder="Họ và tên thí sinh..." style="font-size: 0.8rem; margin: 4px 0;">
+                    <input type="text" id="new-pass" placeholder="Mật khẩu riêng..." style="font-size: 0.8rem; margin: 4px 0;">
+                    <button class="btn btn-primary" onclick="addNewStudent()" style="width:100%; margin-top: 5px;">➕ THÊM THÍ SINH</button>
                 </div>
                 
                 <div class="student-table-container">
                     <table>
                         <thead>
                             <tr>
-                                <th style="width: 40px; text-align: center;">STT</th>
-                                <th>Số báo danh</th>
-                                <th style="text-align:right">Thao tác</th>
+                                <th>SBD</th>
+                                <th>Họ Tên</th>
+                                <th>Mật Khẩu</th>
+                                <th style="text-align:right">Xóa</th>
                             </tr>
                         </thead>
                         <tbody id="student-list-body"></tbody>
                     </table>
                 </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
-                    <button class="btn btn-outline" style="font-size: 0.8rem;" onclick="fetchStudentsFromCloud()">☁️ TẢI TỪ CLOUD</button>
-                    <button class="btn btn-danger" style="font-size: 0.8rem; background: #fca5a5;" onclick="clearAllStudents()">🗑️ XÓA TẤT CẢ</button>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
+                    <button class="btn btn-outline" style="font-size: 0.75rem;" onclick="fetchStudentsFromCloud()">☁️ TẢI CLOUD</button>
+                    <button class="btn btn-danger" style="font-size: 0.75rem; background:#fca5a5" onclick="clearAllStudents()">🗑️ XÓA HẾT</button>
                 </div>
             </div>
         </div>
@@ -114,13 +112,13 @@
     <!-- MÀN HÌNH THI -->
     <div id="quiz-screen" class="hidden">
         <div style="background: var(--dark); color: white; padding: 15px 30px; display:flex; justify-content: space-between; align-items:center;">
-            <span>Thí sinh: <strong id="display-sbd">---</strong></span>
+            <div>Thí sinh: <strong id="display-name">---</strong> (<span id="display-sbd">---</span>)</div>
             <div id="timer" style="font-size: 1.6rem; color: #fbbf24; font-weight:bold; font-family: monospace;">00:00</div>
         </div>
         <div class="p-30 quiz-layout">
             <div>
                 <h2 style="margin-top:0; color: var(--primary);">Câu <span id="q-idx">1</span>:</h2>
-                <h3 id="q-text" style="margin-bottom:25px; line-height:1.5; min-height: 60px;"></h3>
+                <h3 id="q-text" style="margin-bottom:25px; line-height:1.5;"></h3>
                 <div id="options-box"></div>
                 <div style="display:flex; gap:15px; margin-top:40px; padding-top:20px; border-top: 1px solid #f1f5f9;">
                     <button class="btn btn-outline" style="flex:1" onclick="changeQuestion(-1)">⬅️ QUAY LẠI</button>
@@ -128,7 +126,7 @@
                 </div>
             </div>
             <div style="background:#f8fafc; padding:20px; border-radius:12px; border:1px solid #e2e8f0; height: fit-content;">
-                <h4 style="margin-top:0; text-align:center;">DANH SÁCH CÂU HỎI</h4>
+                <h4 style="margin:0 0 15px 0; text-align:center;">BẢN ĐỒ CÂU HỎI</h4>
                 <div class="review-grid" id="review-grid"></div>
                 <button class="btn btn-danger" style="width:100%; margin-top:30px" onclick="confirmSubmission()">NỘP BÀI THI</button>
             </div>
@@ -139,17 +137,18 @@
     <div id="result-screen" class="hidden p-30" style="text-align:center; padding-top: 80px;">
         <h2 style="color: #64748b;">KẾT QUẢ LÀM BÀI</h2>
         <h1 id="res-score" style="font-size: 6rem; color: var(--primary); margin: 20px 0;">0/0</h1>
-        <p style="color: var(--success); font-weight: bold;">Hệ thống đã ghi nhận bài thi của bạn.</p>
-        <button class="btn btn-primary" style="margin-top: 30px;" onclick="location.reload()">HOÀN TẤT</button>
+        <button class="btn btn-primary" onclick="location.reload()">HOÀN TẤT</button>
     </div>
 </div>
 
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxDLzkl-dhmyTlPdsF4bxvX9ksrV51tzWZLFmWOg772Oz4g8f9umbfGLPRuJsoVLT9viQ/exec";
 
+    // Cấu trúc validStudents mới: [{sbd, name, pass}, ...]
     let db_questions = JSON.parse(localStorage.getItem('db_questions')) || [];
     let validStudents = JSON.parse(localStorage.getItem('db_students')) || [];
     let currentExam = [], userAnswers = [], currentIdx = 0, timerInterval, totalSec = 0;
+    let currentUser = null;
 
     // --- LOGIC ĐĂNG NHẬP ---
     function handleLogin() {
@@ -164,15 +163,19 @@
             return;
         }
 
-        if(validStudents.includes(u) && p === '123') {
+        // Tìm thí sinh trong danh sách
+        const student = validStudents.find(s => s.sbd === u && s.pass === p);
+        
+        if(student) {
+            currentUser = student;
             document.getElementById('login-modal').style.display = 'none';
-            startQuiz(u);
+            startQuiz(student);
             return;
         }
-        msg.innerText = "Tài khoản hoặc mật khẩu không chính xác!";
+        msg.innerText = "SBD hoặc Mật khẩu không đúng!";
     }
 
-    // --- LOGIC ADMIN & THÍ SINH ---
+    // --- LOGIC ADMIN ---
     async function syncDrive() {
         const stt = document.getElementById('sync-status');
         stt.innerText = "⏳ Đang tải...";
@@ -186,23 +189,33 @@
 
     function addNewStudent() {
         const sbd = document.getElementById('new-sbd').value.trim();
-        if(!sbd || validStudents.includes(sbd)) return;
-        validStudents.push(sbd);
+        const name = document.getElementById('new-name').value.trim();
+        const pass = document.getElementById('new-pass').value.trim();
+        
+        if(!sbd || !name || !pass) { alert("Vui lòng nhập đủ SBD, Tên và Mật khẩu!"); return; }
+        if(validStudents.find(s => s.sbd === sbd)) { alert("SBD này đã tồn tại!"); return; }
+
+        validStudents.push({ sbd, name, pass });
         saveStudents();
         renderStudentList();
+        
+        // Reset form
         document.getElementById('new-sbd').value = '';
-        fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "addStudent", data: { sbd } }) });
+        document.getElementById('new-name').value = '';
+        document.getElementById('new-pass').value = '';
+        
+        fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "addStudent", data: { sbd, name, pass } }) });
     }
 
     function removeStudent(sbd) {
         if(!confirm(`Xóa thí sinh ${sbd}?`)) return;
-        validStudents = validStudents.filter(s => s !== sbd);
+        validStudents = validStudents.filter(s => s.sbd !== sbd);
         saveStudents();
         renderStudentList();
     }
 
     function clearAllStudents() {
-        if(confirm("CẢNH BÁO: Xóa sạch toàn bộ danh sách thí sinh?")) {
+        if(confirm("Xóa sạch toàn bộ thí sinh?")) {
             validStudents = [];
             saveStudents();
             renderStudentList();
@@ -212,7 +225,7 @@
     async function fetchStudentsFromCloud() {
         try {
             const res = await fetch(SCRIPT_URL + "?action=getStudents");
-            validStudents = await res.json();
+            validStudents = await res.json(); // Giả định server trả về array object
             saveStudents();
             renderStudentList();
         } catch(e) { alert("Lỗi tải dữ liệu!"); }
@@ -223,25 +236,24 @@
     function renderStudentList() {
         const tbody = document.getElementById('student-list-body');
         document.getElementById('student-count').innerText = validStudents.length;
-        if(validStudents.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999;">Trống</td></tr>`;
-            return;
-        }
-        tbody.innerHTML = validStudents.map((s, i) => `
+        tbody.innerHTML = validStudents.map((s) => `
             <tr>
-                <td style="text-align:center">${i+1}</td>
-                <td><strong>${s}</strong></td>
+                <td><strong>${s.sbd}</strong></td>
+                <td>${s.name}</td>
+                <td><small>${s.pass}</small></td>
                 <td style="text-align:right">
-                    <button class="btn-danger" style="padding:4px 8px; border:none; border-radius:4px; font-size:0.7rem; cursor:pointer;" onclick="removeStudent('${s}')">XÓA</button>
+                    <button class="btn-danger" style="padding:2px 6px; font-size:0.6rem; border:none; border-radius:3px;" onclick="removeStudent('${s.sbd}')">XÓA</button>
                 </td>
             </tr>
         `).join('');
     }
 
     // --- LOGIC THI ---
-    function startQuiz(sbd) {
-        document.getElementById('display-sbd').innerText = sbd;
-        const backup = localStorage.getItem('backup_' + sbd);
+    function startQuiz(student) {
+        document.getElementById('display-sbd').innerText = student.sbd;
+        document.getElementById('display-name').innerText = student.name;
+        
+        const backup = localStorage.getItem('backup_' + student.sbd);
         if(backup && confirm("Phục hồi bài thi đang làm dở?")) {
             const data = JSON.parse(backup);
             currentExam = data.currentExam; userAnswers = data.userAnswers;
@@ -288,8 +300,7 @@
     }
 
     function saveProgress() {
-        const sbd = document.getElementById('login-user').value;
-        localStorage.setItem('backup_' + sbd, JSON.stringify({ currentExam, userAnswers, totalSec, currentIdx }));
+        localStorage.setItem('backup_' + currentUser.sbd, JSON.stringify({ currentExam, userAnswers, totalSec, currentIdx }));
     }
 
     function runTimer() {
@@ -303,15 +314,14 @@
 
     async function finalizeQuiz() {
         clearInterval(timerInterval);
-        const sbd = document.getElementById('login-user').value;
-        localStorage.removeItem('backup_' + sbd);
+        localStorage.removeItem('backup_' + currentUser.sbd);
         let score = userAnswers.filter(a => a.choice === a.correct).length;
         document.getElementById('res-score').innerText = score + "/" + currentExam.length;
         switchScreen('result-screen');
-        fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "saveResult", data: { sbd, score: score + "/" + currentExam.length } }) });
+        fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "saveResult", data: { sbd: currentUser.sbd, name: currentUser.name, score: score + "/" + currentExam.length } }) });
     }
 
-    function confirmSubmission() { if(confirm("Bạn có chắc chắn muốn nộp bài?")) finalizeQuiz(); }
+    function confirmSubmission() { if(confirm("Nộp bài thi?")) finalizeQuiz(); }
 
     function switchScreen(id) {
         ['admin-screen', 'quiz-screen', 'result-screen'].forEach(s => document.getElementById(s).classList.add('hidden'));
