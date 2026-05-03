@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Thi Trắc Nghiệm Online Pro</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #4f46e5; --success: #22c55e; --danger: #ef4444; --dark: #1e293b; --bg: #f8fafc; }
+        body { font-family: 'Quicksand', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+        .container { width: 100%; max-width: 1000px; background: white; margin: 0 auto; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; min-height: 600px; position: relative; }
+        .hidden { display: none !important; }
+        .p-30 { padding: 30px; }
+
+        /* Login */
+        .login-card { max-width: 400px; margin: 80px auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 15px; text-align: center; background: #fff; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-family: inherit; }
+        
+        /* Admin */
+        .admin-nav { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #e2e8f0; padding: 12px; text-align: left; }
+        th { background: #f1f5f9; }
+
+        /* Quiz UI */
+        .quiz-header { padding: 20px 30px; background: var(--dark); color: white; display: flex; justify-content: space-between; align-items: center; }
+        .option-card { padding: 15px 20px; border: 2px solid #e2e8f0; border-radius: 12px; margin-bottom: 12px; cursor: pointer; font-weight: 600; transition: 0.3s; }
+        .option-card:hover { border-color: var(--primary); background: #f5f3ff; }
+        .option-card.selected { background: var(--primary); color: white; border-color: var(--primary); }
+
+        .btn { padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; transition: 0.3s; display: inline-block; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-outline { border: 2px solid var(--primary); color: var(--primary); background: transparent; }
+
+        /* Print Style */
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; max-width: 100%; }
+            #print-area { display: block !important; }
+        }
+
+        .circle { display: inline-block; width: 25px; height: 25px; line-height: 25px; text-align: center; border-radius: 50%; border: 1.5px solid #333; margin-right: 8px; font-size: 0.9rem; }
+        .correct-ans { border: 2.5px solid var(--success) !important; color: var(--success); font-weight: bold; }
+        .wrong-ans { border: 2.5px solid var(--danger) !important; color: var(--danger); font-weight: bold; }
+        .both-ans { background: #dcfce7; border: 2.5px solid var(--success) !important; color: var(--success); }
+        .print-question { margin-bottom: 25px; page-break-inside: avoid; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+        .set-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; }
+        .set-item { padding: 20px; border: 2px solid #e2e8f0; border-radius: 15px; cursor: pointer; text-align: center; transition: 0.3s; }
+        .set-item:hover { transform: translateY(-5px); border-color: var(--primary); background: #eef2ff; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- 1. MÀN HÌNH ĐĂNG NHẬP -->
+    <div id="login-screen" class="p-30">
+        <div class="login-card">
+            <h1 style="color: var(--primary); margin-bottom: 5px;">QUIZ SYSTEM</h1>
+            <p style="color: #64748b; margin-bottom: 25px;">Đăng nhập để tiếp tục</p>
+            <input type="text" id="login-user" placeholder="Số báo danh (hoặc admin)">
+            <input type="password" id="login-pass" placeholder="Mật khẩu">
+            <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="handleLogin()">ĐĂNG NHẬP</button>
+            <p id="login-err" style="color: var(--danger); font-size: 0.9rem; margin-top: 15px;"></p>
+        </div>
+    </div>
+
+    <!-- 2. MÀN HÌNH ADMIN -->
+    <div id="admin-screen" class="hidden p-30">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2>BẢNG QUẢN TRỊ</h2>
+            <button onclick="logout()" class="btn btn-outline">Đăng xuất</button>
+        </div>
+        
+        <div class="admin-nav">
+            <button class="btn btn-outline" onclick="showTab('tab-students')">Thí sinh</button>
+            <button class="btn btn-outline" onclick="showTab('tab-questions')">Đề thi (Excel)</button>
+        </div>
+
+        <div id="tab-students" class="admin-tab">
+            <h3>Thêm Thí Sinh</h3>
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <input type="text" id="new-sbd" placeholder="Số báo danh">
+                <input type="text" id="new-pass" placeholder="Mật khẩu">
+                <button class="btn btn-primary" onclick="addStudent()">THÊM</button>
+            </div>
+            <table>
+                <thead><tr><th>SBD</th><th>Mật khẩu</th><th>Hành động</th></tr></thead>
+                <tbody id="student-list"></tbody>
+            </table>
+        </div>
+
+        <div id="tab-questions" class="admin-tab hidden">
+            <h3>Tải Lên Ngân Hàng Câu Hỏi</h3>
+            <div class="login-card" style="margin: 20px 0; max-width: 100%;">
+                <input type="file" id="file-upload" accept=".xlsx, .xls">
+                <p id="status-msg" style="color: #64748b;">Định dạng hỗ trợ: .xlsx, .xls (Cột: q, a, b, c, d, correct)</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. MÀN HÌNH CHỌN ĐỀ (THÍ SINH) -->
+    <div id="student-home" class="hidden p-30" style="text-align: center;">
+        <h2 style="margin-bottom: 10px;">Xin chào, <span id="user-name-display" style="color: var(--primary);"></span></h2>
+        <p>Hệ thống đã chuẩn bị 5 đề thi ngẫu nhiên cho bạn:</p>
+        <div class="set-grid" id="set-buttons"></div>
+        <button onclick="logout()" class="btn" style="margin-top: 40px; color: #64748b;">Đăng xuất</button>
+    </div>
+
+    <!-- 4. MÀN HÌNH THI -->
+    <div id="quiz-screen" class="hidden">
+        <div class="quiz-header">
+            <div><strong id="display-set-id">Đề 1</strong> | <span id="q-progress">Câu 1/10</span></div>
+            <div id="timer" style="font-size: 1.2rem;">20s</div>
+        </div>
+        <div class="p-30">
+            <div id="q-text" style="font-size: 1.4rem; font-weight: 700; margin-bottom: 30px; line-height: 1.4;"></div>
+            <div id="options-box"></div>
+            <div style="margin-top: 30px; text-align: right;">
+                <button class="btn btn-primary" id="next-btn" onclick="submitAnswer()" disabled>TIẾP THEO</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. MÀN HÌNH KẾT QUẢ -->
+    <div id="result-screen" class="hidden p-30">
+        <div class="no-print" style="text-align: center; margin-bottom: 40px;">
+            <h2 style="font-size: 2rem;">Hoàn Thành Bài Thi!</h2>
+            <div style="font-size: 5rem; font-weight: 800; color: var(--primary); margin: 20px 0;" id="final-score">0/0</div>
+            <button class="btn btn-primary" onclick="window.print()">IN BÀI LÀM (PDF)</button>
+            <button class="btn btn-outline" onclick="location.reload()">THI LẠI</button>
+        </div>
+        <div id="print-area">
+            <h2 style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px;">BÁO CÁO CHI TIẾT - SBD: <span id="print-sbd"></span></h2>
+            <div id="print-content" style="margin-top: 20px;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- CẤU HÌNH API GOOGLE SHEETS (Dán URL App Script của bạn vào đây) ---
+    const SCRIPT_URL = ""; 
+
+    let students = JSON.parse(localStorage.getItem('quiz_users')) || [];
+    let questionBank = JSON.parse(localStorage.getItem('quiz_bank')) || [];
+    let examSets = [], currentExam = [], currentIdx = 0, score = 0, timer, timeLeft = 20, selectedKey = null, userHistory = [];
+
+    // --- ĐĂNG NHẬP ---
+    function handleLogin() {
+        const u = document.getElementById('login-user').value.trim();
+        const p = document.getElementById('login-pass').value.trim();
+        const err = document.getElementById('login-err');
+
+        if(u === 'admin' && p === 'admin') {
+            showAdmin();
+        } else {
+            const found = students.find(s => s.sbd === u && s.pass === p);
+            if(found) showStudentHome(u);
+            else err.innerText = "Sai số báo danh hoặc mật khẩu!";
+        }
+    }
+
+    function showAdmin() {
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('admin-screen').classList.remove('hidden');
+        renderStudentTable();
+    }
+
+    function showStudentHome(sbd) {
+        if(questionBank.length < 5) { alert("Ngân hàng đề thi chưa sẵn sàng!"); return; }
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('student-home').classList.remove('hidden');
+        document.getElementById('user-name-display').innerText = sbd;
+        document.getElementById('print-sbd').innerText = sbd;
+        generateRandomSets();
+    }
+
+    function logout() { location.reload(); }
+
+    // --- QUẢN TRỊ VIÊN ---
+    function addStudent() {
+        const sbd = document.getElementById('new-sbd').value;
+        const pass = document.getElementById('new-pass').value;
+        if(!sbd || !pass) return;
+        students.push({sbd, pass});
+        localStorage.setItem('quiz_users', JSON.stringify(students));
+        renderStudentTable();
+        document.getElementById('new-sbd').value = '';
+        document.getElementById('new-pass').value = '';
+    }
+
+    function renderStudentTable() {
+        const list = document.getElementById('student-list');
+        list.innerHTML = students.map((s, i) => `
+            <tr><td>${s.sbd}</td><td>${s.pass}</td>
+            <td><button class="btn btn-danger" onclick="deleteStudent(${i})">Xóa</button></td></tr>
+        `).join('');
+    }
+
+    function deleteStudent(i) {
+        students.splice(i, 1);
+        localStorage.setItem('quiz_users', JSON.stringify(students));
+        renderStudentTable();
+    }
+
+    function showTab(tabId) {
+        document.querySelectorAll('.admin-tab').forEach(t => t.classList.add('hidden'));
+        document.getElementById(tabId).classList.remove('hidden');
+    }
+
+    // --- FILE EXCEL ---
+    document.getElementById('file-upload').addEventListener('change', function(e) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const data = new Uint8Array(event.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            questionBank = XLSX.utils.sheet_to_json(sheet);
+            localStorage.setItem('quiz_bank', JSON.stringify(questionBank));
+            document.getElementById('status-msg').innerText = `✅ Đã lưu ${questionBank.length} câu hỏi!`;
+        };
+        reader.readAsArrayBuffer(e.target.files[0]);
+    });
+
+    // --- THI CỬ ---
+    function generateRandomSets() {
+        const shuffled = [...questionBank].sort(() => Math.random() - 0.5);
+        const size = Math.floor(shuffled.length / 5);
+        examSets = [];
+        for(let i=0; i<5; i++) examSets.push(shuffled.slice(i * size, (i + 1) * size));
+
+        const box = document.getElementById('set-buttons');
+        box.innerHTML = examSets.map((set, i) => `
+            <div class="set-item" onclick="startQuiz(${i})">
+                <strong>Đề số ${i+1}</strong><br>
+                <small style="color: #64748b">${set.length} câu hỏi</small>
+            </div>
+        `).join('');
+    }
+
+    function startQuiz(idx) {
+        currentExam = examSets[idx];
+        document.getElementById('student-home').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        document.getElementById('display-set-id').innerText = `Đề số ${idx+1}`;
+        renderQuestion();
+    }
+
+    function renderQuestion() {
+        clearInterval(timer); timeLeft = 20; selectedKey = null;
+        document.getElementById('next-btn').disabled = true;
+        document.getElementById('timer').innerText = `${timeLeft}s`;
+
+        const qData = currentExam[currentIdx];
+        document.getElementById('q-progress').innerText = `Câu ${currentIdx+1}/${currentExam.length}`;
+        document.getElementById('q-text').innerText = qData.q;
+
+        const box = document.getElementById('options-box');
+        box.innerHTML = '';
+        ['a','b','c','d'].forEach(key => {
+            if(qData[key]) {
+                const div = document.createElement('div');
+                div.className = 'option-card';
+                div.innerText = `${key.toUpperCase()}. ${qData[key]}`;
+                div.onclick = () => {
+                    document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+                    div.classList.add('selected');
+                    selectedKey = key;
+                    document.getElementById('next-btn').disabled = false;
+                };
+                box.appendChild(div);
+            }
+        });
+
+        timer = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer').innerText = `${timeLeft}s`;
+            if(timeLeft <= 0) submitAnswer();
+        }, 1000);
+    }
+
+    function submitAnswer() {
+        const correct = currentExam[currentIdx].correct.toLowerCase();
+        if(selectedKey === correct) score++;
+        
+        userHistory.push({
+            q: currentExam[currentIdx].q,
+            options: currentExam[currentIdx],
+            user: selectedKey,
+            correct: correct
+        });
+
+        currentIdx++;
+        if(currentIdx < currentExam.length) renderQuestion();
+        else finishQuiz();
+    }
+
+    function finishQuiz() {
+        clearInterval(timer);
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+        document.getElementById('final-score').innerText = `${score}/${currentExam.length}`;
+
+        const content = document.getElementById('print-content');
+        content.innerHTML = userHistory.map((item, i) => {
+            let optionsHtml = '';
+            ['a','b','c','d'].forEach(k => {
+                if(item.options[k]) {
+                    let circleCls = 'circle';
+                    if(k === item.user && k === item.correct) circleCls += ' both-ans';
+                    else if(k === item.user) circleCls += ' wrong-ans';
+                    else if(k === item.correct) circleCls += ' correct-ans';
+                    optionsHtml += `<div style="margin:8px 0;"><span class="${circleCls}">${k.toUpperCase()}</span> ${item.options[k]}</div>`;
+                }
+            });
+            return `<div class="print-question"><p><strong>Câu ${i+1}: ${item.q}</strong></p>${optionsHtml}</div>`;
+        }).join('');
+    }
+</script>
+</body>
+</html>
